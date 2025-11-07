@@ -2,15 +2,20 @@ import axios from 'axios'
 
 const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
-  withCredentials: true,
+  withCredentials: true,  // Keep this for cookies
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
-// Request interceptor
+// Request interceptor to add Authorization header if token exists
 axiosClient.interceptors.request.use(
   (config) => {
+    // Try to get token from localStorage (if stored there)
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
@@ -20,7 +25,13 @@ axiosClient.interceptors.request.use(
 
 // Response interceptor for token refresh
 axiosClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Store token in localStorage if received in response
+    if (response.data?.access_token) {
+      localStorage.setItem('access_token', response.data.access_token)
+    }
+    return response
+  },
   async (error) => {
     const originalRequest = error.config
 
@@ -46,13 +57,16 @@ axiosClient.interceptors.response.use(
           { withCredentials: true }
         )
         
-        // If refresh successful, retry the original request
-        if (refreshResponse.status === 200) {
+        // If refresh successful, store token and retry the original request
+        if (refreshResponse.status === 200 && refreshResponse.data?.access_token) {
+          localStorage.setItem('access_token', refreshResponse.data.access_token)
+          originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.access_token}`
           return axiosClient(originalRequest)
         }
       } catch (refreshError: any) {
         // Refresh failed - clear retry flag and reject silently
         originalRequest._retry = false
+        localStorage.removeItem('access_token')
         
         // Don't log 401 errors from refresh endpoint (expected when not logged in)
         if (refreshError.response?.status !== 401) {

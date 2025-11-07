@@ -43,6 +43,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 async def login(
     user_data: UserLogin,
     response: Response,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """Login user and return JWT tokens"""
@@ -58,7 +59,6 @@ async def login(
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
     # Store refresh token in Redis (if available)
-    # Note: If Redis is not available, tokens will still work via cookies
     from app.database.redis import is_redis_available
     if is_redis_available():
         redis_client = get_redis()
@@ -70,17 +70,20 @@ async def login(
             )
         except Exception as e:
             print(f"[WARNING] Failed to store refresh token in Redis: {e}")
-            # Continue - tokens will work via cookies even without Redis
+    
+    # Get origin from request for cookie domain (if needed)
+    origin = request.headers.get("origin")
     
     # Set HTTP-only cookies with explicit path
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=settings.ENV == "production",
-        samesite="lax",
+        secure=settings.ENV == "production",  # HTTPS only in production
+        samesite="lax",  # Changed from "none" to "lax" for better compatibility
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/"
+        # Don't set domain - let browser handle it automatically
     )
     response.set_cookie(
         key="refresh_token",

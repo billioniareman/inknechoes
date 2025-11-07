@@ -9,8 +9,15 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user"""
-    # Try to get access token from cookies
-    access_token = request.cookies.get("access_token")
+    # Try to get access token from Authorization header first
+    authorization = request.headers.get("Authorization")
+    access_token = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        access_token = authorization.split("Bearer ")[1]
+    else:
+        # Fallback to cookies
+        access_token = request.cookies.get("access_token")
     
     if not access_token:
         raise HTTPException(
