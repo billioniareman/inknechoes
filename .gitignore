@@ -4,15 +4,13 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 venv/
-.venv/
+env/
+ENV/
+.venv
 *.egg-info/
 dist/
 build/
-.pytest_cache/
-.coverage
-htmlcov/
 
 # Node
 node_modules/
@@ -23,10 +21,12 @@ yarn-error.log*
 dist/
 build/
 
-# Environment
+# Environment variables
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
 
 # IDE
 .vscode/
@@ -34,19 +34,34 @@ build/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Logs
 *.log
 logs/
 
-# Docker
-.dockerignore
-
 # Database
 *.db
 *.sqlite
+*.sqlite3
 
+# Testing
+.coverage
+.pytest_cache/
+.nyc_output/
+
+# Docker
+.dockerignore
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Build outputs
+*.egg-info
+*.dist-info

@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: inknechoes-backend
+    env: python
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /health
+    envVars:
+      - key: ENV
+        value: production
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: inknechoes-postgres
+          property: connectionString
+      - key: MONGO_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+        value: ""  # Optional for free tier
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@inknechoes.com
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+        value: ""
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+        value: ""
+      - key: S3_BUCKET
+        value: inknechoes-media
+
+databases:
+  - name: inknechoes-postgres
+    plan: free
+    databaseName: inknechoes
+    user: inknechoes_user
+

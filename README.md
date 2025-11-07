@@ -190,29 +190,56 @@ npm test
 
 ## 📦 Deployment
 
+### Quick Deployment Guide
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed deployment instructions.
+
+### Free Tier Deployment Stack
+
+- **Frontend**: Vercel (free tier)
+- **Backend**: Render (free tier)
+- **PostgreSQL**: Render (free tier)
+- **MongoDB**: MongoDB Atlas (free tier - 512MB)
+- **Image Storage**: Cloudinary (free tier - 25GB)
+- **Email**: Brevo (free tier - 300 emails/day)
+
 ### Production Environment Variables
 
 Update `.env` files with production values:
-- Strong `SECRET_KEY`
+- Strong `SECRET_KEY` (generate with: `openssl rand -hex 32`)
 - Production database URLs
-- AWS S3 credentials (if using)
-- Email API key (Resend/SendGrid)
+- Cloudinary credentials (for image storage)
+- Brevo API key (for email)
 - Production CORS origins
 
-### Backend Deployment
+### Deployment Files
 
-The backend can be deployed to:
-- AWS ECS
-- Render
-- DigitalOcean
-- Any Docker-compatible platform
+- `vercel.json` - Vercel configuration for frontend
+- `render.yaml` - Render configuration for backend
+- `backend/Dockerfile` - Production Docker image
+- `DEPLOYMENT.md` - Complete deployment guide
 
-### Frontend Deployment
+### Quick Deploy Steps
 
-The frontend can be deployed to:
-- Vercel
-- Netlify
-- Any static hosting service
+1. **Setup Services**:
+   - MongoDB Atlas (free cluster)
+   - Cloudinary (free account)
+   - Brevo (free account)
+
+2. **Deploy Backend**:
+   - Push to GitHub
+   - Create Render web service
+   - Create Render PostgreSQL database
+   - Set environment variables
+   - Deploy
+
+3. **Deploy Frontend**:
+   - Push to GitHub
+   - Import to Vercel
+   - Set `VITE_API_BASE_URL` environment variable
+   - Deploy
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete instructions.
 
 ## 🤝 Contributing
 
