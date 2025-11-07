@@ -9,7 +9,7 @@ import { Heart, Hand } from 'lucide-react'
 
 export default function PostView() {
   const { slug } = useParams<{ slug: string }>()
-  const { user, isAuthenticated } = useUserStore()
+  const { isAuthenticated } = useUserStore()
   const [post, setPost] = useState<PostWithContent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

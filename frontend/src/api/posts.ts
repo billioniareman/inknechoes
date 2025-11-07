@@ -40,6 +40,7 @@ export interface PostUpdate {
   slug?: string
   visibility?: string
   content?: PostContent
+  content_type?: string
 }
 
 export interface PostListResponse {

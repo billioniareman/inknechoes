@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { postsApi, Post } from '../api/posts'
 import PostCard from '../components/PostCard'
-import { Search, TrendingUp, Clock, Filter, X } from 'lucide-react'
+import { Search, Filter, X } from 'lucide-react'
 
 export default function Discover() {
   const [searchParams, setSearchParams] = useSearchParams()

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, BookOpen, Bookmark, BookmarkCheck, Maximize2, Minimize2, Settings, Download, List, X, Type, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Maximize2, Minimize2, Settings, Download, List, X } from 'lucide-react'
 import { chaptersApi, Chapter } from '../api/chapters'
 import { bookmarksApi, Bookmark as BookmarkType } from '../api/bookmarks'
 import { readingProgressApi, ReadingProgress } from '../api/readingProgress'
@@ -215,7 +215,7 @@ export default function BookViewer({ title, content, author, date, postId, cover
     const updateProgress = async () => {
       try {
         const totalPages = chapters.length > 0 
-          ? chapters.reduce((sum, ch) => sum + Math.ceil(ch.content?.body.split(/\s+/).length / Math.floor(500 * (fontSize / 18))) || 1, 0)
+          ? chapters.reduce((sum, ch) => sum + Math.ceil((ch.content?.body?.split(/\s+/).length || 0) / Math.floor(500 * (fontSize / 18))), 0)
           : pages.length
 
         await readingProgressApi.updateProgress(postId, {
@@ -311,10 +311,6 @@ export default function BookViewer({ title, content, author, date, postId, cover
     window.print()
   }
 
-  const handleExportEPUB = () => {
-    // EPUB export would require a library like epub.js
-    alert('EPUB export coming soon!')
-  }
 
   const handleChapterSelect = (index: number) => {
     setCurrentChapterIndex(index)
@@ -345,9 +341,6 @@ export default function BookViewer({ title, content, author, date, postId, cover
   }, [currentPage, pages.length, isTurning, isFullscreen])
 
   const currentChapter = currentChapterIndex !== null && chapters[currentChapterIndex] ? chapters[currentChapterIndex] : null
-  const totalPages = chapters.length > 0 
-    ? chapters.reduce((sum, ch) => sum + Math.ceil((ch.content?.body.split(/\s+/).length || 0) / Math.floor(500 * (fontSize / 18))), 0)
-    : pages.length
 
   return (
     <div className={`min-h-screen bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 py-12 px-4 ${isFullscreen ? 'fixed inset-0 z-50 overflow-auto' : ''}`}>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { postsApi, Post } from '../api/posts'
-import PostCard from '../components/PostCard'
 import { Edit, Eye, Trash2 } from 'lucide-react'
 
 export default function MyPosts() {

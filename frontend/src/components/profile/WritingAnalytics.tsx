@@ -49,12 +49,12 @@ export default function WritingAnalytics({ analytics }: WritingAnalyticsProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ genre, percentage }) => `${genre}: ${percentage}%`}
+                  label={(entry: { genre: string; percentage: number }) => `${entry.genre}: ${entry.percentage}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
                 >
-                  {analytics.genre_distribution.map((entry, index) => (
+                  {analytics.genre_distribution.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
