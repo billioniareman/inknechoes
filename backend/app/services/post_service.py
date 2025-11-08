@@ -68,15 +68,31 @@ async def update_post(db: Session, post: Post, post_data: dict) -> Post:
     # Update MongoDB content if provided
     if "content" in post_data:
         mongo_db = get_mongo_db()
-        update_fields = {
-            "body": post_data["content"].body,
-            "tags": post_data["content"].tags,
-            "updated_at": datetime.now(timezone.utc)
-        }
-        if hasattr(post_data["content"], 'cover_image_url') and post_data["content"].cover_image_url is not None:
-            update_fields["cover_image_url"] = post_data["content"].cover_image_url
-        if hasattr(post_data["content"], 'description') and post_data["content"].description is not None:
-            update_fields["description"] = post_data["content"].description
+        
+        # Handle both dict and Pydantic model for content
+        content = post_data["content"]
+        if isinstance(content, dict):
+            # Content is already a dictionary (from .dict())
+            update_fields = {
+                "body": content.get("body"),
+                "tags": content.get("tags", []),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            if content.get("cover_image_url"):
+                update_fields["cover_image_url"] = content["cover_image_url"]
+            if content.get("description"):
+                update_fields["description"] = content["description"]
+        else:
+            # Content is a Pydantic model object
+            update_fields = {
+                "body": content.body,
+                "tags": content.tags,
+                "updated_at": datetime.now(timezone.utc)
+            }
+            if hasattr(content, 'cover_image_url') and content.cover_image_url is not None:
+                update_fields["cover_image_url"] = content.cover_image_url
+            if hasattr(content, 'description') and content.description is not None:
+                update_fields["description"] = content.description
         
         await mongo_db.posts.update_one(
             {"_id": ObjectId(post.mongo_id)},
