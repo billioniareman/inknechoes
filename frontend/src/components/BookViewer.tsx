@@ -4,6 +4,8 @@ import { chaptersApi, Chapter } from '../api/chapters'
 import { bookmarksApi, Bookmark as BookmarkType } from '../api/bookmarks'
 import { readingProgressApi, ReadingProgress } from '../api/readingProgress'
 import { useUserStore } from '../store/userStore'
+import DictionaryPopup from './DictionaryPopup'
+import { useDictionary } from '../hooks/useDictionary'
 
 // Two Column Content Component
 function TwoColumnContent({ content, fontSize, fontFamily }: { content: string; fontSize: number; fontFamily: string }) {
@@ -86,6 +88,16 @@ export default function BookViewer({ title, content, author, date, postId, cover
   const [showBookmarkNote, setShowBookmarkNote] = useState(false)
   const [bookmarkNote, setBookmarkNote] = useState('')
   const bookRef = useRef<HTMLDivElement>(null)
+
+  // Dictionary functionality
+  const {
+    selectedWord,
+    dictionaryData,
+    popupPosition: dictionaryPosition,
+    isLoading: isDictionaryLoading,
+    showPopup: showDictionaryPopup,
+    closePopup: closeDictionaryPopup,
+  } = useDictionary({ enabled: true })
 
   // Load chapters
   useEffect(() => {
@@ -676,6 +688,19 @@ export default function BookViewer({ title, content, author, date, postId, cover
           )}
         </div>
       </div>
+
+      {/* Dictionary Popup */}
+      {showDictionaryPopup && selectedWord && (
+        <div data-dictionary-popup>
+          <DictionaryPopup
+            word={selectedWord}
+            definition={dictionaryData}
+            position={dictionaryPosition}
+            onClose={closeDictionaryPopup}
+            isLoading={isDictionaryLoading}
+          />
+        </div>
+      )}
     </div>
   )
 }

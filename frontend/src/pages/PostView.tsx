@@ -5,6 +5,8 @@ import { useUserStore } from '../store/userStore'
 import CommentSection from '../components/CommentSection'
 import PoetryScroll from '../components/PoetryScroll'
 import BookViewer from '../components/BookViewer'
+import DictionaryPopup from '../components/DictionaryPopup'
+import { useDictionary } from '../hooks/useDictionary'
 import { Heart, Hand } from 'lucide-react'
 
 export default function PostView() {
@@ -20,6 +22,16 @@ export default function PostView() {
     claps_count: number
   } | null>(null)
   const [updating, setUpdating] = useState(false)
+
+  // Dictionary functionality
+  const {
+    selectedWord,
+    dictionaryData,
+    popupPosition: dictionaryPosition,
+    isLoading: isDictionaryLoading,
+    showPopup: showDictionaryPopup,
+    closePopup: closeDictionaryPopup,
+  } = useDictionary({ enabled: true })
 
   useEffect(() => {
     if (slug) {
@@ -287,6 +299,19 @@ export default function PostView() {
           }}
           dangerouslySetInnerHTML={{ __html: post.content.body }}
         />
+        
+        {/* Dictionary Popup */}
+        {showDictionaryPopup && selectedWord && (
+          <div data-dictionary-popup>
+            <DictionaryPopup
+              word={selectedWord}
+              definition={dictionaryData}
+              position={dictionaryPosition}
+              onClose={closeDictionaryPopup}
+              isLoading={isDictionaryLoading}
+            />
+          </div>
+        )}
         {post.content.tags.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-2">
             {post.content.tags.map((tag) => (

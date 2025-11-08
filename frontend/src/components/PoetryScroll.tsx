@@ -1,3 +1,5 @@
+import DictionaryPopup from './DictionaryPopup'
+import { useDictionary } from '../hooks/useDictionary'
 
 interface PoetryScrollProps {
   title: string
@@ -7,6 +9,15 @@ interface PoetryScrollProps {
 }
 
 export default function PoetryScroll({ title, content, author, date }: PoetryScrollProps) {
+  // Dictionary functionality
+  const {
+    selectedWord,
+    dictionaryData,
+    popupPosition: dictionaryPosition,
+    isLoading: isDictionaryLoading,
+    showPopup: showDictionaryPopup,
+    closePopup: closeDictionaryPopup,
+  } = useDictionary({ enabled: true })
   // Extract text from HTML content
   const extractTextFromHTML = (html: string): string[] => {
     // Create a temporary div to parse HTML
@@ -132,6 +143,19 @@ export default function PoetryScroll({ title, content, author, date }: PoetryScr
           </div>
         </div>
       </div>
+
+      {/* Dictionary Popup */}
+      {showDictionaryPopup && selectedWord && (
+        <div data-dictionary-popup>
+          <DictionaryPopup
+            word={selectedWord}
+            definition={dictionaryData}
+            position={dictionaryPosition}
+            onClose={closeDictionaryPopup}
+            isLoading={isDictionaryLoading}
+          />
+        </div>
+      )}
     </div>
   )
 }
