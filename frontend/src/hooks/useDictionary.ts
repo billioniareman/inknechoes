@@ -13,7 +13,7 @@ export function useDictionary(options: UseDictionaryOptions = {}) {
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(false)
   const [showPopup, setShowPopup] = useState(false)
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Extract word from selected text
   const extractWord = useCallback((text: string): string | null => {

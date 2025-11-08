@@ -83,7 +83,7 @@ export default function TiptapEditor({
   useEffect(() => {
     if (!editor) return
 
-    let debounceTimer: NodeJS.Timeout | null = null
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
     const handleSelectionUpdate = () => {
       // Clear any existing timer
