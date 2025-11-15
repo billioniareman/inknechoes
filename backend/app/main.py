@@ -18,6 +18,7 @@ import uvicorn
 
 settings = get_settings()
 
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
