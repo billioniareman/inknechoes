@@ -47,9 +47,9 @@ export default function Register() {
       const user = await authApi.getCurrentUser()
       setUser(user)
       
-      success('Account created successfully! Welcome to Ink&Echoes!')
+      success('Account created successfully! Please check your email to verify your account.')
       
-      // Redirect to home page
+      // Redirect to home page (user can verify email later)
       navigate('/', { replace: true })
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || 'Registration failed. Please try again.'

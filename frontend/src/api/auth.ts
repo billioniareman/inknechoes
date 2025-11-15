@@ -21,6 +21,7 @@ export interface User {
   genre_tags?: string
   is_active: boolean
   is_admin: boolean
+  email_verified: boolean
   created_at: string
 }
 
@@ -54,6 +55,31 @@ export const authApi = {
     const response = await axiosClient.post('/api/v1/auth/password-reset/confirm', {
       token,
       new_password: newPassword,
+    })
+    return response.data
+  },
+
+  verifyEmail: async (token: string) => {
+    const response = await axiosClient.post('/api/v1/auth/verify-email', { token })
+    return response.data
+  },
+
+  resendVerification: async (email: string) => {
+    const response = await axiosClient.post('/api/v1/auth/resend-verification', { email })
+    return response.data
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    const response = await axiosClient.post('/api/v1/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    })
+    return response.data
+  },
+
+  deleteAccount: async (password: string) => {
+    const response = await axiosClient.delete('/api/v1/auth/account', {
+      data: { password },
     })
     return response.data
   },

@@ -13,6 +13,9 @@ class User(Base):
     bio = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+    email_verified = Column(Boolean, default=False)  # Email verification status
+    failed_login_attempts = Column(Integer, default=0)  # Track failed login attempts
+    locked_until = Column(DateTime(timezone=True), nullable=True)  # Account lockout until
     genre_tags = Column(String, nullable=True)  # Comma-separated tags
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

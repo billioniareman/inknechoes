@@ -14,6 +14,10 @@ import Profile from './pages/Profile'
 import Discover from './pages/Discover'
 import MyPosts from './pages/MyPosts'
 import Admin from './pages/Admin'
+import VerifyEmail from './pages/VerifyEmail'
+import Settings from './pages/Settings'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -93,6 +97,9 @@ function App() {
               </PublicRoute>
             } 
           />
+          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
           <Route path="post/:slug" element={<PostView />} />
           <Route path="user/:username" element={<Profile />} />
           <Route
@@ -124,6 +131,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />
