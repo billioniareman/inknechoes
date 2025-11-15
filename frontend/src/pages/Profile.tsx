@@ -53,25 +53,25 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
+    <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
       {/* User Identity Section */}
       {analytics?.user_stats ? (
         <UserIdentitySection user={user} stats={analytics.user_stats} />
       ) : (
-        <div className="bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 border border-amber-200/50 rounded-lg shadow-lg p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-3xl font-serif font-bold shadow-lg">
+        <div className="bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 border border-amber-200/50 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl font-serif font-bold shadow-lg flex-shrink-0">
               {user.username.charAt(0).toUpperCase()}
             </div>
-            <div className="flex-1">
-              <h1 className="text-4xl font-serif font-bold text-amber-900 mb-2">{user.username}</h1>
-              {user.bio && <p className="text-amber-800/80 mb-4 max-w-2xl">{user.bio}</p>}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900 mb-1 sm:mb-2">{user.username}</h1>
+              {user.bio && <p className="text-sm sm:text-base text-amber-800/80 mb-3 sm:mb-4 max-w-2xl">{user.bio}</p>}
               {user.genre_tags && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {user.genre_tags.split(',').map((tag, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium border border-amber-200"
+                      className="px-2 sm:px-3 py-0.5 sm:py-1 bg-amber-100 text-amber-800 rounded-full text-xs sm:text-sm font-medium border border-amber-200"
                     >
                       {tag.trim()}
                     </span>
@@ -87,13 +87,13 @@ export default function Profile() {
       {posts.length > 0 && <ActivityHeatmap posts={posts} />}
 
       {/* Tabs */}
-      <div className="border-b border-amber-200/50 mb-6 mt-8">
-        <nav className="flex space-x-8">
+      <div className="border-b border-amber-200/50 mb-4 sm:mb-6 mt-6 sm:mt-8 overflow-x-auto">
+        <nav className="flex space-x-4 sm:space-x-8 min-w-max">
           {(['overview', 'writing', 'reading', 'insights'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 px-1 border-b-2 font-medium transition-colors capitalize ${
+              className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium transition-colors capitalize text-sm sm:text-base whitespace-nowrap ${
                 activeTab === tab
                   ? 'border-amber-600 text-amber-900'
                   : 'border-transparent text-amber-700 hover:text-amber-900'
@@ -110,21 +110,21 @@ export default function Profile() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-serif font-semibold text-amber-900">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+                <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-amber-900">
                   Published Works
                 </h2>
-                <span className="text-sm text-amber-800/70">
+                <span className="text-xs sm:text-sm text-amber-800/70">
                   {posts.length} {posts.length === 1 ? 'post' : 'posts'}
                 </span>
               </div>
               {posts.length === 0 ? (
-                <div className="text-center py-12 bg-white/40 border border-amber-200/50 rounded-lg">
-                  <p className="text-amber-700 text-lg">No published works yet.</p>
-                  <p className="text-amber-600/70 text-sm mt-2">This author hasn't published any content.</p>
+                <div className="text-center py-8 sm:py-12 bg-white/40 border border-amber-200/50 rounded-lg">
+                  <p className="text-amber-700 text-base sm:text-lg">No published works yet.</p>
+                  <p className="text-amber-600/70 text-xs sm:text-sm mt-2">This author hasn't published any content.</p>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {posts.map((post) => (
                     <PostCard key={post.id} post={post} />
                   ))}

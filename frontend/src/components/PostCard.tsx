@@ -36,8 +36,8 @@ export default function PostCard({ post, showProgress = false, progressPercentag
   return (
     <div className="group relative overflow-hidden border border-amber-200/50 rounded-lg bg-white/60 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
       {/* Cover Image */}
-      {coverImageUrl && (
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
+        {coverImageUrl && (
+        <div className="relative h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-amber-100 to-amber-200">
           <img
             src={coverImageUrl}
             alt={post.title}
@@ -51,21 +51,21 @@ export default function PostCard({ post, showProgress = false, progressPercentag
         </div>
       )}
       
-      <div className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-2">
               <span className="text-amber-800/60">{getContentTypeIcon()}</span>
               <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getContentTypeColor()}`}>
                 {post.content_type || 'article'}
               </span>
             </div>
             <Link to={`/post/${post.slug}`}>
-              <h2 className="text-2xl font-serif font-semibold mb-3 text-amber-900 hover:text-amber-800 transition-colors line-clamp-2">
+              <h2 className="text-xl sm:text-2xl font-serif font-semibold mb-2 sm:mb-3 text-amber-900 hover:text-amber-800 transition-colors line-clamp-2">
                 {post.title}
               </h2>
             </Link>
-            <div className="flex items-center gap-4 text-sm text-amber-800/70 mb-2 flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-amber-800/70 mb-2 flex-wrap">
               {post.author_username && (
                 <Link
                   to={`/user/${post.author_username}`}
