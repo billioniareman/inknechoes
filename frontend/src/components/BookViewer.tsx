@@ -33,7 +33,7 @@ function TwoColumnContent({ content, fontSize, fontFamily }: { content: string; 
   }, [content])
 
   return (
-    <div className="grid grid-cols-2 gap-12">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
       {/* Left Column */}
       <div
         className="text-amber-900/90 prose prose-lg max-w-none"
@@ -355,20 +355,14 @@ export default function BookViewer({ title, content, author, date, postId, cover
   const currentChapter = currentChapterIndex !== null && chapters[currentChapterIndex] ? chapters[currentChapterIndex] : null
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 py-12 px-4 ${isFullscreen ? 'fixed inset-0 z-50 overflow-auto' : ''}`}>
-      <div className="max-w-7xl mx-auto flex gap-6">
+    <div className={`min-h-screen bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 py-4 sm:py-6 md:py-12 px-2 sm:px-4 ${isFullscreen ? 'fixed inset-0 z-50 overflow-auto' : ''}`}>
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6">
         {/* Table of Contents - Left Side */}
         {chapters.length > 0 && (
-          <div className="w-64 flex-shrink-0">
+          <div className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-6 bg-white/90 backdrop-blur-sm border border-amber-200/50 rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-serif font-bold text-amber-900">Table of Contents</h2>
-                <button 
-                  onClick={() => setShowTOC(!showTOC)} 
-                  className="md:hidden p-1 hover:bg-amber-100 rounded"
-                >
-                  <X className="w-4 h-4 text-amber-800" />
-                </button>
               </div>
               <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {chapters.map((chapter, index) => (
@@ -392,15 +386,17 @@ export default function BookViewer({ title, content, author, date, postId, cover
         {/* Main Content Area */}
         <div className="flex-1">
           {/* Toolbar */}
-          <div className="flex items-center justify-between mb-6 bg-white/80 backdrop-blur-sm border border-amber-200/50 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowTOC(!showTOC)}
-                className="md:hidden p-2 hover:bg-amber-100 rounded-lg transition-colors"
-                title="Table of Contents"
-              >
-                <List className="w-5 h-5 text-amber-800" />
-              </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 bg-white/80 backdrop-blur-sm border border-amber-200/50 rounded-lg p-3 sm:p-4 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              {chapters.length > 0 && (
+                <button
+                  onClick={() => setShowTOC(!showTOC)}
+                  className="lg:hidden p-2 hover:bg-amber-100 rounded-lg transition-colors"
+                  title="Table of Contents"
+                >
+                  <List className="w-5 h-5 text-amber-800" />
+                </button>
+              )}
               {user && (
                 <button
                   onClick={handleBookmark}
@@ -437,7 +433,7 @@ export default function BookViewer({ title, content, author, date, postId, cover
               </div>
             </div>
             {progress && (
-              <div className="text-sm text-amber-800">
+              <div className="text-xs sm:text-sm text-amber-800">
                 Progress: {Math.round(progress.progress_percentage)}%
               </div>
             )}
@@ -447,7 +443,7 @@ export default function BookViewer({ title, content, author, date, postId, cover
           {chapters.length > 0 && (
             <button
               onClick={() => setShowTOC(!showTOC)}
-              className="md:hidden fixed bottom-4 right-4 z-40 p-3 bg-amber-800 text-amber-50 rounded-full shadow-lg hover:bg-amber-900"
+              className="lg:hidden fixed bottom-4 right-4 z-40 p-3 bg-amber-800 text-amber-50 rounded-full shadow-lg hover:bg-amber-900"
               title="Table of Contents"
             >
               <List className="w-5 h-5" />
@@ -456,12 +452,12 @@ export default function BookViewer({ title, content, author, date, postId, cover
 
           {/* Mobile Table of Contents Sidebar */}
           {showTOC && (
-            <div className="md:hidden fixed inset-0 z-50 flex">
+            <div className="lg:hidden fixed inset-0 z-50 flex">
               <div className="bg-black/50 flex-1" onClick={() => setShowTOC(false)}></div>
-              <div className="bg-white w-80 shadow-xl overflow-y-auto">
-                <div className="p-6">
+              <div className="bg-white w-80 max-w-[85vw] shadow-xl overflow-y-auto">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-serif font-bold text-amber-900">Table of Contents</h2>
+                    <h2 className="text-lg sm:text-xl font-serif font-bold text-amber-900">Table of Contents</h2>
                     <button onClick={() => setShowTOC(false)} className="p-1 hover:bg-amber-100 rounded">
                       <X className="w-5 h-5 text-amber-800" />
                     </button>
@@ -471,7 +467,7 @@ export default function BookViewer({ title, content, author, date, postId, cover
                       <button
                         key={chapter.id}
                         onClick={() => handleChapterSelect(index)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors ${
+                        className={`w-full text-left p-2 sm:p-3 rounded-lg transition-colors text-sm sm:text-base ${
                           currentChapterIndex === index
                             ? 'bg-amber-100 text-amber-900 font-semibold'
                             : 'hover:bg-amber-50 text-amber-800'
@@ -567,11 +563,11 @@ export default function BookViewer({ title, content, author, date, postId, cover
               {coverImageUrl && (
                 <img src={coverImageUrl} alt={title} className="mx-auto mb-6 max-w-xs rounded-lg shadow-lg" />
               )}
-              <h1 className="text-5xl md:text-6xl font-serif font-bold text-amber-900 mb-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-bold text-amber-900 mb-3 sm:mb-4 px-2">
                 {title}
               </h1>
               {description && (
-                <p className="text-lg text-amber-800/70 max-w-2xl mx-auto mb-4">{description}</p>
+                <p className="text-sm sm:text-base md:text-lg text-amber-800/70 max-w-2xl mx-auto mb-3 sm:mb-4 px-4">{description}</p>
               )}
               {author && (
                 <p className="text-2xl font-serif text-amber-800/70 italic mb-2">
@@ -599,22 +595,22 @@ export default function BookViewer({ title, content, author, date, postId, cover
               }`}
             >
               {/* Book Page - Traditional Layout */}
-              <div className="bg-white shadow-2xl border border-amber-800/30 min-h-[800px] relative">
+              <div className="bg-white shadow-2xl border border-amber-800/30 min-h-[400px] sm:min-h-[600px] md:min-h-[800px] relative">
                 {/* Page Header - Title at top center, page numbers at corners */}
-                <div className="absolute top-0 left-0 right-0 h-16 border-b border-amber-800/20 flex items-center justify-between px-8">
-                  <div className="text-amber-800/60 text-sm font-serif">
+                <div className="absolute top-0 left-0 right-0 h-12 sm:h-14 md:h-16 border-b border-amber-800/20 flex items-center justify-between px-4 sm:px-6 md:px-8">
+                  <div className="text-amber-800/60 text-xs sm:text-sm font-serif">
                     {currentPage + 1}
                   </div>
-                  <div className="text-amber-900 font-serif font-semibold text-sm">
+                  <div className="text-amber-900 font-serif font-semibold text-xs sm:text-sm truncate max-w-[40%] sm:max-w-none">
                     {currentChapter ? currentChapter.title : title}
                   </div>
-                  <div className="text-amber-800/60 text-sm font-serif">
+                  <div className="text-amber-800/60 text-xs sm:text-sm font-serif">
                     {pages.length}
                   </div>
                 </div>
 
                 {/* Main Content Area - Two Column Layout */}
-                <div className="pt-20 pb-16 px-12">
+                <div className="pt-14 sm:pt-16 md:pt-20 pb-8 sm:pb-12 md:pb-16 px-4 sm:px-6 md:px-12">
                   {currentPage === 0 && currentChapterIndex === null ? (
                     <div className="text-center py-16">
                       <p className="text-xl text-amber-800/60 italic">Begin reading...</p>
@@ -629,8 +625,8 @@ export default function BookViewer({ title, content, author, date, postId, cover
                 </div>
 
                 {/* Page Footer */}
-                <div className="absolute bottom-0 left-0 right-0 h-12 border-t border-amber-800/20 flex items-center justify-center">
-                  <div className="text-amber-800/40 text-xs font-serif">
+                <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-10 md:h-12 border-t border-amber-800/20 flex items-center justify-center">
+                  <div className="text-amber-800/40 text-[10px] sm:text-xs font-serif truncate max-w-[90%]">
                     {title}
                   </div>
                 </div>
@@ -639,49 +635,53 @@ export default function BookViewer({ title, content, author, date, postId, cover
           </div>
 
           {/* Navigation Controls */}
-          <div className="flex justify-center items-center gap-8 mt-8">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 md:gap-8 mt-6 sm:mt-8">
             <button
               onClick={handlePrevPage}
               disabled={(currentPage === 0 && (currentChapterIndex === null || currentChapterIndex === 0)) || isTurning}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
                 (currentPage === 0 && (currentChapterIndex === null || currentChapterIndex === 0)) || isTurning
                   ? 'bg-amber-200/50 text-amber-800/30 cursor-not-allowed'
                   : 'bg-amber-800 text-amber-50 hover:bg-amber-900 shadow-lg hover:shadow-xl'
               }`}
             >
-              <ChevronLeft className="w-5 h-5" />
-              Previous
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </button>
 
-            <div className="text-amber-800/70 font-serif text-sm">
+            <div className="text-amber-800/70 font-serif text-xs sm:text-sm text-center px-2">
               Page {currentPage + 1} of {pages.length}
-              {currentChapter && ` • ${currentChapter.title}`}
+              {currentChapter && (
+                <span className="hidden sm:inline"> • {currentChapter.title}</span>
+              )}
             </div>
 
             <button
               onClick={handleNextPage}
               disabled={(currentPage >= pages.length - 1 && (currentChapterIndex === null || currentChapterIndex >= chapters.length - 1)) || isTurning}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-all text-sm sm:text-base ${
                 (currentPage >= pages.length - 1 && (currentChapterIndex === null || currentChapterIndex >= chapters.length - 1)) || isTurning
                   ? 'bg-amber-200/50 text-amber-800/30 cursor-not-allowed'
                   : 'bg-amber-800 text-amber-50 hover:bg-amber-900 shadow-lg hover:shadow-xl'
               }`}
             >
-              Next
-              <ChevronRight className="w-5 h-5" />
+              <span className="hidden sm:inline">Next</span>
+              <span className="sm:hidden">Next</span>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
           {/* Progress Bar */}
           {progress && (
-            <div className="mt-6 max-w-4xl mx-auto">
-              <div className="h-2 bg-amber-200 rounded-full overflow-hidden">
+            <div className="mt-4 sm:mt-6 max-w-4xl mx-auto px-2">
+              <div className="h-1.5 sm:h-2 bg-amber-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-amber-800 transition-all duration-300"
                   style={{ width: `${progress.progress_percentage}%` }}
                 />
               </div>
-              <div className="text-sm text-amber-800 mt-2 text-center">
+              <div className="text-xs sm:text-sm text-amber-800 mt-1 sm:mt-2 text-center">
                 {Math.round(progress.progress_percentage)}% complete
               </div>
             </div>

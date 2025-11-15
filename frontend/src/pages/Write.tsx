@@ -333,9 +333,9 @@ export default function Write() {
   const buttonText = visibility === 'public' ? 'Publish' : 'Save as Draft'
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-serif font-bold text-amber-900">
+    <div className="max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 md:mb-8 gap-3 sm:gap-4">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900">
           {isEditing ? 'Edit Post' : 'Write a New Post'}
         </h1>
         {/* Auto-save Indicator */}
@@ -425,7 +425,7 @@ export default function Write() {
                 placeholder="fiction, poetry, sci-fi"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1 text-amber-800">Content Type</label>
                 <select
@@ -437,7 +437,7 @@ export default function Write() {
                       setActiveChapterIndex(null)
                     }
                   }}
-                  className="w-full p-2 border border-amber-200 rounded-md bg-white"
+                  className="w-full p-2.5 sm:p-2 text-base sm:text-sm border border-amber-200 rounded-md bg-white"
                 >
                   <option value="article">Article</option>
                   <option value="poetry">Poetry</option>
@@ -449,7 +449,7 @@ export default function Write() {
                 <select
                   value={visibility}
                   onChange={(e) => setVisibility(e.target.value)}
-                  className="w-full p-2 border border-amber-200 rounded-md bg-white"
+                  className="w-full p-2.5 sm:p-2 text-base sm:text-sm border border-amber-200 rounded-md bg-white"
                 >
                   <option value="public">Public</option>
                   <option value="draft">Draft</option>
@@ -551,7 +551,7 @@ export default function Write() {
           <button
             onClick={handleSave}
             disabled={publishing || !title || (contentType !== 'book' && !content) || (contentType === 'book' && chapters.length === 0)}
-            className="px-6 py-3 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+            className="w-full sm:w-auto px-6 py-3 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors text-base sm:text-sm"
           >
             {publishing 
               ? (visibility === 'public' ? 'Publishing...' : 'Saving...') 

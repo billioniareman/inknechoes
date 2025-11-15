@@ -53,29 +53,29 @@ export default function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-12">
-      <h1 className="text-4xl font-serif font-bold mb-6 text-center">Sign In</h1>
+    <div className="max-w-md mx-auto py-6 sm:py-8 md:py-12 px-4">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-4 sm:mb-6 text-center">Sign In</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-md">{error}</div>
+          <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-md">{error}</div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
+          <label className="block text-sm font-medium mb-1.5">Email</label>
           <input
             type="email"
             {...register('email')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
           {errors.email && (
-            <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+            <p className="text-xs sm:text-sm text-destructive mt-1">{errors.email.message}</p>
           )}
         </div>
         <div>
-          <div className="flex justify-between items-center mb-1">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1.5 gap-1">
             <label className="block text-sm font-medium">Password</label>
             <Link 
               to="/forgot-password" 
-              className="text-sm text-primary hover:underline"
+              className="text-xs sm:text-sm text-primary hover:underline"
             >
               Forgot password?
             </Link>
@@ -83,21 +83,21 @@ export default function Login() {
           <input
             type="password"
             {...register('password')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
           {errors.password && (
-            <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+            <p className="text-xs sm:text-sm text-destructive mt-1">{errors.password.message}</p>
           )}
         </div>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium"
+          className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium text-base sm:text-sm"
         >
           {isSubmitting ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
         Don't have an account?{' '}
         <Link to="/register" className="text-primary hover:underline">
           Sign up

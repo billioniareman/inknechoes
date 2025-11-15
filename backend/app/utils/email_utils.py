@@ -10,7 +10,7 @@ try:
 except ImportError:
     resend = None
 
-frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+frontend_url = settings.FRONTEND_URL or "http://localhost:5173"
     
 async def send_email_via_brevo(to: str, subject: str, html_content: str):
     """Send email using Brevo API (free tier: 300 emails/day)"""
@@ -136,7 +136,7 @@ async def send_welcome_email(email: str, username: str):
 async def send_email_verification_email(email: str, username: str, verification_token: str):
     """Send email verification email"""
     # Get frontend URL from settings or use default
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = settings.FRONTEND_URL or "http://localhost:5173"
     verify_url = f"{frontend_url}/verify-email?token={verification_token}"
     
     html_content = f"""

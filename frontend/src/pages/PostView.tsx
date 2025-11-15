@@ -142,42 +142,42 @@ export default function PostView() {
           content={post.content.body}
           date={post.created_at}
         />
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
           {/* Engagement buttons */}
-          <div className="flex items-center gap-4 mb-8 justify-center">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
             <button
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.is_liked
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Heart className={`w-5 h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
               <span>{engagement?.likes_count || 0}</span>
             </button>
             <button
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.has_clapped
                   ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Hand className="w-5 h-5" />
+              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{engagement?.claps_count || 0}</span>
             </button>
           </div>
 
           {/* Tags */}
           {post.content.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center mb-8">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4 sm:mb-6 md:mb-8">
               {post.content.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
+                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
                 >
                   #{tag}
                 </span>
@@ -202,42 +202,42 @@ export default function PostView() {
           coverImageUrl={post.content.cover_image_url}
           description={post.content.description}
         />
-        <div className="max-w-4xl mx-auto py-8 px-4">
+        <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
           {/* Engagement buttons */}
-          <div className="flex items-center gap-4 mb-8 justify-center">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
             <button
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.is_liked
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Heart className={`w-5 h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
               <span>{engagement?.likes_count || 0}</span>
             </button>
             <button
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.has_clapped
                   ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Hand className="w-5 h-5" />
+              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{engagement?.claps_count || 0}</span>
             </button>
           </div>
 
           {/* Tags */}
           {post.content.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center mb-8">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4 sm:mb-6 md:mb-8">
               {post.content.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
+                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
                 >
                   #{tag}
                 </span>
@@ -253,40 +253,40 @@ export default function PostView() {
 
   // Default article view
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
       <article>
-        <h1 className="text-5xl font-serif font-bold mb-6 leading-tight text-amber-900">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-amber-900">
           {post.title}
         </h1>
-        <p className="text-muted-foreground mb-8">
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
           {new Date(post.created_at).toLocaleDateString()}
         </p>
 
         {/* Engagement buttons */}
         {isAuthenticated && (
-          <div className="flex items-center gap-4 mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 flex-wrap">
             <button
               onClick={handleLike}
               disabled={updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.is_liked
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
-              <Heart className={`w-5 h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
               <span>{engagement?.likes_count || 0}</span>
             </button>
             <button
               onClick={handleClap}
               disabled={updating}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
                 engagement?.has_clapped
                   ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
-              <Hand className="w-5 h-5" />
+              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{engagement?.claps_count || 0}</span>
             </button>
           </div>
@@ -313,11 +313,11 @@ export default function PostView() {
           </div>
         )}
         {post.content.tags.length > 0 && (
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap gap-1.5 sm:gap-2">
             {post.content.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
+                className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
               >
                 #{tag}
               </span>

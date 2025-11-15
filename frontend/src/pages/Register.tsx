@@ -59,71 +59,71 @@ export default function Register() {
   }
 
   return (
-    <div className="max-w-md mx-auto py-12">
-      <h1 className="text-4xl font-serif font-bold mb-6 text-center">Create Your Account</h1>
+    <div className="max-w-md mx-auto py-6 sm:py-8 md:py-12 px-4">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-4 sm:mb-6 text-center">Create Your Account</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-md">{error}</div>
+          <div className="p-3 text-sm bg-destructive/10 text-destructive rounded-md">{error}</div>
         )}
         <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
+          <label className="block text-sm font-medium mb-1.5">Email</label>
           <input
             type="email"
             {...register('email')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
           {errors.email && (
-            <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+            <p className="text-xs sm:text-sm text-destructive mt-1">{errors.email.message}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
+          <label className="block text-sm font-medium mb-1.5">Username</label>
           <input
             type="text"
             {...register('username')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
           {errors.username && (
-            <p className="text-sm text-destructive mt-1">{errors.username.message}</p>
+            <p className="text-xs sm:text-sm text-destructive mt-1">{errors.username.message}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
+          <label className="block text-sm font-medium mb-1.5">Password</label>
           <input
             type="password"
             {...register('password')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
           {errors.password && (
-            <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+            <p className="text-xs sm:text-sm text-destructive mt-1">{errors.password.message}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Bio (optional)</label>
+          <label className="block text-sm font-medium mb-1.5">Bio (optional)</label>
           <textarea
             {...register('bio')}
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md resize-none"
             rows={3}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Genre Tags (optional)</label>
+          <label className="block text-sm font-medium mb-1.5">Genre Tags (optional)</label>
           <input
             type="text"
             {...register('genre_tags')}
             placeholder="e.g., fiction, poetry, sci-fi"
-            className="w-full p-2 border border-border rounded-md"
+            className="w-full p-3 sm:p-2.5 text-base sm:text-sm border border-border rounded-md"
           />
         </div>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium"
+          className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 disabled:opacity-50 font-medium text-base sm:text-sm"
         >
           {isSubmitting ? 'Creating account...' : 'Create Account'}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-xs sm:text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link to="/login" className="text-primary hover:underline">
           Login

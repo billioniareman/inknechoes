@@ -8,7 +8,7 @@ import os
 class Settings(BaseSettings):
     # Environment
     ENV: str = "development"
-    
+    FRONTEND_URL: str = "inknechoes.vercel.app"
     # Database URLs
     POSTGRES_URL: str = "postgresql://postgres:ayush@localhost:5432/postgres"
     MONGO_URI: str = "mongodb://localhost:27017/inknechoes"

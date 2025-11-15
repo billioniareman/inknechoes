@@ -59,8 +59,8 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   }
 
   return (
-    <div className="mt-12 pt-8 border-t border-border/50">
-      <h3 className="text-3xl font-serif font-semibold mb-6">Comments</h3>
+    <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-border/50">
+      <h3 className="text-2xl sm:text-3xl font-serif font-semibold mb-4 sm:mb-6">Comments</h3>
 
       {isAuthenticated && (
         <form onSubmit={handleSubmit} className="mb-6">

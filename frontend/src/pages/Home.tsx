@@ -32,12 +32,12 @@ export default function Home() {
     <div className="min-h-screen">
       {isAuthenticated ? (
         /* Authenticated User Feed */
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <div className="mb-8">
-            <h1 className="text-4xl font-serif font-bold text-amber-900 mb-2">
+        <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900 mb-1 sm:mb-2">
               Welcome back, {user?.username}!
             </h1>
-            <p className="text-amber-800/70">Discover stories tailored for you</p>
+            <p className="text-sm sm:text-base text-amber-800/70">Discover stories tailored for you</p>
           </div>
 
           {loading ? (
@@ -47,11 +47,11 @@ export default function Home() {
               {/* Current Reading Section */}
               {feed.current_reading && feed.current_reading.length > 0 && (
                 <section>
-                  <div className="flex items-center gap-3 mb-6">
-                    <Bookmark className="w-6 h-6 text-amber-800" />
-                    <h2 className="text-2xl font-serif font-bold text-amber-900">Continue Reading</h2>
+                  <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                    <Bookmark className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800" />
+                    <h2 className="text-xl sm:text-2xl font-serif font-bold text-amber-900">Continue Reading</h2>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {feed.current_reading.map((item) => (
                       <div key={item.post.id} className="relative">
                         <PostCard
@@ -59,8 +59,8 @@ export default function Home() {
                           showProgress={true}
                           progressPercentage={item.progress.progress_percentage}
                         />
-                        <div className="absolute top-4 right-4 text-xs text-amber-800/60 bg-white/90 px-2 py-1 rounded">
-                          {item.progress.current_page} / {item.progress.total_pages} pages
+                        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 text-[10px] sm:text-xs text-amber-800/60 bg-white/90 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                          {item.progress.current_page}/{item.progress.total_pages}
                         </div>
                       </div>
                     ))}
@@ -71,19 +71,19 @@ export default function Home() {
               {/* Latest Content Section */}
               {feed.latest_posts && feed.latest_posts.length > 0 && (
                 <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-6 h-6 text-amber-800" />
-                      <h2 className="text-2xl font-serif font-bold text-amber-900">Latest Stories</h2>
+                  <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800" />
+                      <h2 className="text-xl sm:text-2xl font-serif font-bold text-amber-900">Latest Stories</h2>
                     </div>
                     <Link
                       to="/discover?sort=latest"
-                      className="text-sm text-amber-800 hover:text-amber-900 underline"
+                      className="text-xs sm:text-sm text-amber-800 hover:text-amber-900 underline"
                     >
                       View all
                     </Link>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {feed.latest_posts.slice(0, 6).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
@@ -94,19 +94,19 @@ export default function Home() {
               {/* Most Appreciated Section */}
               {feed.most_appreciated && feed.most_appreciated.length > 0 && (
                 <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <TrendingUp className="w-6 h-6 text-amber-800" />
-                      <h2 className="text-2xl font-serif font-bold text-amber-900">Most Appreciated</h2>
+                  <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800" />
+                      <h2 className="text-xl sm:text-2xl font-serif font-bold text-amber-900">Most Appreciated</h2>
                     </div>
                     <Link
                       to="/discover?sort=most_appreciated"
-                      className="text-sm text-amber-800 hover:text-amber-900 underline"
+                      className="text-xs sm:text-sm text-amber-800 hover:text-amber-900 underline"
                     >
                       View all
                     </Link>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {feed.most_appreciated.slice(0, 6).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
@@ -117,21 +117,21 @@ export default function Home() {
               {/* Genre-Based Recommendations */}
               {feed.genre_posts && feed.genre_posts.length > 0 && user?.genre_tags && (
                 <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <Sparkles className="w-6 h-6 text-amber-800" />
-                      <h2 className="text-2xl font-serif font-bold text-amber-900">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-800 flex-shrink-0" />
+                      <h2 className="text-xl sm:text-2xl font-serif font-bold text-amber-900 truncate">
                         For You: {user.genre_tags.split(',')[0].trim()}
                       </h2>
                     </div>
                     <Link
                       to="/discover"
-                      className="text-sm text-amber-800 hover:text-amber-900 underline"
+                      className="text-xs sm:text-sm text-amber-800 hover:text-amber-900 underline flex-shrink-0"
                     >
                       Explore more
                     </Link>
                   </div>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {feed.genre_posts.slice(0, 6).map((post) => (
                       <PostCard key={post.id} post={post} />
                     ))}
@@ -170,29 +170,29 @@ export default function Home() {
               </div>
               
               {/* Main Heading */}
-              <h1 className="text-6xl md:text-7xl font-serif font-bold mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold mb-4 sm:mb-6 leading-tight px-2">
                 <span className="text-foreground">Where Stories Find</span>
                 <br />
                 <span className="text-primary">Their Echo</span>
               </h1>
               
               {/* Subheading */}
-              <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed px-4">
                 A distraction-free sanctuary for writers to create, publish, and share their work. 
                 For readers to discover stories that resonate.
               </p>
               
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">
                 <Link
                   to="/register"
-                  className="px-8 py-3 bg-primary text-primary-foreground rounded-md text-lg font-medium hover:opacity-90 transition-opacity"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-md text-base sm:text-lg font-medium hover:opacity-90 transition-opacity text-center"
                 >
                   Create Your Account
                 </Link>
                 <Link
                   to="/discover"
-                  className="px-8 py-3 bg-secondary border-2 border-foreground/20 text-foreground rounded-md text-lg font-medium hover:bg-muted transition-colors"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-secondary border-2 border-foreground/20 text-foreground rounded-md text-base sm:text-lg font-medium hover:bg-muted transition-colors text-center"
                 >
                   Explore Stories
                 </Link>
@@ -201,13 +201,13 @@ export default function Home() {
           </section>
 
           {/* Features Section */}
-          <section className="py-20 px-4 bg-white/50">
+          <section className="py-12 sm:py-16 md:py-20 px-3 sm:px-4 bg-white/50">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-center mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-center mb-8 sm:mb-12 md:mb-16">
                 Everything you need to share your voice
               </h2>
               
-              <div className="grid md:grid-cols-3 gap-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 md:gap-12">
                 {/* Feature 1 */}
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
@@ -248,17 +248,17 @@ export default function Home() {
           </section>
 
           {/* Additional CTA Section */}
-          <section className="py-20 px-4 text-center">
+          <section className="py-12 sm:py-16 md:py-20 px-3 sm:px-4 text-center">
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4 sm:mb-6 px-2">
                 Ready to share your story?
               </h2>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 px-4">
                 Join a community of writers and readers who believe in the power of words.
               </p>
               <Link
                 to="/register"
-                className="inline-block px-8 py-3 bg-primary text-primary-foreground rounded-md text-lg font-medium hover:opacity-90 transition-opacity"
+                className="inline-block px-6 sm:px-8 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-md text-base sm:text-lg font-medium hover:opacity-90 transition-opacity"
               >
                 Create Your Account
               </Link>
