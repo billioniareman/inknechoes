@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # Email (Brevo - free tier)
-    BREVO_API_KEY: str = ""
+    BREVO_API_KEY: str = "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"
     EMAIL_API_KEY: str = ""  # Legacy support for Resend
-    EMAIL_FROM: str = "noreply@inknechoes.com"
+    EMAIL_FROM: str = "rampra9981@gmail.com"
     
     # CORS - stored as string, parsed to list via property
     # Use Field with validation_alias to map CORS_ORIGINS env var

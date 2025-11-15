@@ -1,13 +1,17 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useUserStore } from '../store/userStore'
-import { LogOut, PenTool, User, Search, X } from 'lucide-react'
+import { LogOut, PenTool, User, Search, X, Mail } from 'lucide-react'
+import { authApi } from '../api/auth'
+import { useToast } from '../contexts/ToastContext'
 
 export default function Layout() {
   const { user, isAuthenticated, logout } = useUserStore()
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
+  const [resendingVerification, setResendingVerification] = useState(false)
 
   const handleLogout = async () => {
     await logout()
@@ -21,6 +25,25 @@ export default function Layout() {
       setSearchQuery('')
       setShowSearch(false)
     }
+  }
+
+  const handleResendVerification = async () => {
+    if (!user?.email) return
+    setResendingVerification(true)
+    try {
+      await authApi.resendVerification(user.email)
+      showToast('Verification email sent! Please check your inbox.', 'success')
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Failed to resend verification email'
+      showToast(message, 'error')
+    } finally {
+      setResendingVerification(false)
+    }
+  }
+
+  const handleDismissVerificationBanner = () => {
+    // Store dismissal in localStorage (optional - can be improved)
+    localStorage.setItem('email_verification_dismissed', 'true')
   }
 
   return (
@@ -95,6 +118,13 @@ export default function Layout() {
                     <User className="h-5 w-5" />
                     <span className="hidden sm:inline">{user?.username}</span>
                   </Link>
+                  <Link
+                    to="/settings"
+                    className="text-foreground hover:text-primary transition-colors font-medium hidden md:block"
+                    title="Settings"
+                  >
+                    Settings
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="text-foreground hover:text-primary transition-colors"
@@ -123,6 +153,48 @@ export default function Layout() {
           </div>
         </div>
       </nav>
+
+      {/* Email Verification Banner */}
+      {isAuthenticated && user && !user.email_verified && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-sm font-medium text-amber-900">
+                    Please verify your email address
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    Check your inbox for the verification link
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleResendVerification}
+                  disabled={resendingVerification}
+                  className="text-sm text-amber-700 hover:text-amber-900 font-medium disabled:opacity-50"
+                >
+                  {resendingVerification ? 'Sending...' : 'Resend'}
+                </button>
+                <Link
+                  to="/verify-email"
+                  className="text-sm text-amber-700 hover:text-amber-900 font-medium"
+                >
+                  Verify
+                </Link>
+                <button
+                  onClick={handleDismissVerificationBanner}
+                  className="text-amber-600 hover:text-amber-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Search Bar */}
       {showSearch && (
