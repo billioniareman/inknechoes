@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     # Database URLs
     POSTGRES_URL: str = "postgresql://postgres:ayush@localhost:5432/postgres"
     MONGO_URI: str = "mongodb://localhost:27017/inknechoes"
-    REDIS_URL: str = "redis://localhost:6379/0"
     
     # Cloudinary (for free tier image storage)
     CLOUDINARY_CLOUD_NAME: str = ""

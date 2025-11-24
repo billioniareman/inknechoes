@@ -43,8 +43,9 @@ async def create_comment(
     db.commit()
     db.refresh(comment)
     
-    # Add author username
+    # Add author username and like status
     comment.author_username = current_user.username
+    comment.liked_by_user = False  # New comment, user hasn't liked it yet
     return comment
 
 
@@ -59,9 +60,11 @@ async def get_post_comments(
         Comment.parent_id == None
     ).order_by(Comment.created_at.asc()).all()
     
-    # Add author usernames
+    # Add author usernames and like status (not authenticated for this endpoint)
     for comment in comments:
-        comment.author_username = db.query(User).filter(User.id == comment.author_id).first().username
+        author = db.query(User).filter(User.id == comment.author_id).first()
+        comment.author_username = author.username if author else None
+        comment.liked_by_user = False  # Public endpoint, no user context
     
     return comments
 
@@ -79,7 +82,9 @@ async def get_comment(
             detail="Comment not found"
         )
     
-    comment.author_username = db.query(User).filter(User.id == comment.author_id).first().username
+    author = db.query(User).filter(User.id == comment.author_id).first()
+    comment.author_username = author.username if author else None
+    comment.liked_by_user = False  # Public endpoint, no user context
     return comment
 
 
@@ -109,6 +114,7 @@ async def update_comment(
     db.refresh(comment)
     
     comment.author_username = current_user.username
+    comment.liked_by_user = current_user in comment.liked_by
     return comment
 
 
@@ -143,7 +149,7 @@ async def like_comment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Like a comment"""
+    """Like/Unlike a comment (toggle)"""
     comment = db.query(Comment).filter(Comment.id == comment_id).first()
     if not comment:
         raise HTTPException(
@@ -151,11 +157,24 @@ async def like_comment(
             detail="Comment not found"
         )
     
-    # TODO: Implement like tracking to prevent duplicate likes
-    comment.likes_count += 1
+    # Check if user already liked this comment
+    already_liked = current_user in comment.liked_by
+    
+    if already_liked:
+        # Unlike: remove user from liked_by and decrement count
+        comment.liked_by.remove(current_user)
+        comment.likes_count = max(0, comment.likes_count - 1)  # Ensure count doesn't go negative
+    else:
+        # Like: add user to liked_by and increment count
+        comment.liked_by.append(current_user)
+        comment.likes_count += 1
+    
     db.commit()
     db.refresh(comment)
     
-    comment.author_username = db.query(User).filter(User.id == comment.author_id).first().username
+    author = db.query(User).filter(User.id == comment.author_id).first()
+    comment.author_username = author.username if author else None
+    comment.liked_by_user = current_user in comment.liked_by
     return comment
+
 

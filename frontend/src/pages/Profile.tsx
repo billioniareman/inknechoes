@@ -1,8 +1,10 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { usersApi, User } from '../api/users'
 import { Post } from '../api/posts'
+import { getFollowStats, FollowStats } from '../api/follows'
 import PostCard from '../components/PostCard'
+import FollowButton from '../components/FollowButton'
 import UserIdentitySection from '../components/profile/UserIdentitySection'
 import WritingAnalytics from '../components/profile/WritingAnalytics'
 import ReadingAnalytics from '../components/profile/ReadingAnalytics'
@@ -14,6 +16,7 @@ export default function Profile() {
   const [user, setUser] = useState<User | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [analytics, setAnalytics] = useState<any>(null)
+  const [followStats, setFollowStats] = useState<FollowStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'overview' | 'writing' | 'reading' | 'insights'>('overview')
 
@@ -25,14 +28,16 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const [userData, postsData, analyticsData] = await Promise.all([
+      const [userData, postsData, analyticsData, followStatsData] = await Promise.all([
         usersApi.getUserProfile(username!),
         usersApi.getUserPosts(username!),
         usersApi.getUserAnalytics(username!).catch(() => null), // Analytics might fail for new users
+        getFollowStats(username!).catch(() => null), // Follow stats might fail if not logged in
       ])
       setUser(userData)
       setPosts(postsData)
       setAnalytics(analyticsData)
+      setFollowStats(followStatsData)
     } catch (error) {
       console.error('Error loading profile:', error)
     } finally {
@@ -56,7 +61,16 @@ export default function Profile() {
     <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
       {/* User Identity Section */}
       {analytics?.user_stats ? (
-        <UserIdentitySection user={user} stats={analytics.user_stats} />
+        <UserIdentitySection
+          user={user}
+          stats={analytics.user_stats}
+          username={username}
+          followStats={followStats}
+          onFollowChange={async () => {
+            const newStats = await getFollowStats(username!).catch(() => null);
+            if (newStats) setFollowStats(newStats);
+          }}
+        />
       ) : (
         <div className="bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 border border-amber-200/50 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
@@ -64,7 +78,39 @@ export default function Profile() {
               {user.username.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900 mb-1 sm:mb-2">{user.username}</h1>
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900">
+                  {user.username}
+                </h1>
+                <FollowButton
+                  username={user.username}
+                  initialIsFollowing={followStats?.is_following || false}
+                  onFollowChange={async () => {
+                    // Refresh follow stats after follow/unfollow
+                    const newStats = await getFollowStats(username!).catch(() => null);
+                    if (newStats) setFollowStats(newStats);
+                  }}
+                />
+              </div>
+
+              {/* Follow Stats */}
+              {followStats && (
+                <div className="flex gap-4 mb-3 text-sm text-amber-800">
+                  <Link
+                    to={`/user/${username}/followers`}
+                    className="hover:text-amber-900 hover:underline"
+                  >
+                    <span className="font-semibold">{followStats.followers_count}</span> followers
+                  </Link>
+                  <Link
+                    to={`/user/${username}/following`}
+                    className="hover:text-amber-900 hover:underline"
+                  >
+                    <span className="font-semibold">{followStats.following_count}</span> following
+                  </Link>
+                </div>
+              )}
+
               {user.bio && <p className="text-sm sm:text-base text-amber-800/80 mb-3 sm:mb-4 max-w-2xl">{user.bio}</p>}
               {user.genre_tags && (
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -93,11 +139,10 @@ export default function Profile() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium transition-colors capitalize text-sm sm:text-base whitespace-nowrap ${
-                activeTab === tab
-                  ? 'border-amber-600 text-amber-900'
-                  : 'border-transparent text-amber-700 hover:text-amber-900'
-              }`}
+              className={`pb-3 sm:pb-4 px-1 border-b-2 font-medium transition-colors capitalize text-sm sm:text-base whitespace-nowrap ${activeTab === tab
+                ? 'border-amber-600 text-amber-900'
+                : 'border-transparent text-amber-700 hover:text-amber-900'
+                }`}
             >
               {tab}
             </button>

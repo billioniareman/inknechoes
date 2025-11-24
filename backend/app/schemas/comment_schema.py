@@ -24,6 +24,7 @@ class CommentResponse(CommentBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     author_username: Optional[str] = None
+    liked_by_user: Optional[bool] = False  # Indicates if current user has liked this comment
     
     class Config:
         from_attributes = True
