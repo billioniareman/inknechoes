@@ -8,4 +8,5 @@ from app.models.reading_progress import ReadingProgress
 from app.models.audit_log import AuditLog
 from app.models.user_preferences import UserPreferences
 from app.models.user_session import UserSession
+from app.models.verification_token import VerificationToken, TokenType
 

@@ -9,7 +9,7 @@ from app.database.mongo import connect_to_mongo, close_mongo_connection
 # Import models to ensure they're registered with Base
 from app.models import (
     User, Post, Comment, Chapter, Bookmark, ReadingProgress, 
-    AuditLog, UserPreferences, UserSession
+    AuditLog, UserPreferences, UserSession, VerificationToken
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter

@@ -17,7 +17,10 @@ from app.utils.email_utils import (
     send_password_change_notification, send_login_notification, send_account_deletion_confirmation
 )
 from app.services.audit_service import create_audit_log
-from app.database.redis import get_redis
+from app.services.token_service import (
+    create_token, get_token, mark_token_as_used, delete_token, delete_user_tokens
+)
+from app.models.verification_token import TokenType
 from datetime import timedelta
 from app.config import get_settings
 import secrets
@@ -49,15 +52,18 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     # Generate email verification token
     verification_token = secrets.token_urlsafe(32)
     
-    # Store verification token in Redis (24 hours expiry)
-    from app.database.redis import is_redis_available
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.setex(f"email_verify:{verification_token}", 86400, str(user.id))  # 24 hours
-        except Exception as e:
-            print(f"[WARNING] Failed to store email verification token in Redis: {e}")
-            print(f"[DEV] Email verification token for {user.email}: {verification_token}")
+    # Store verification token in PostgreSQL (24 hours expiry)
+    try:
+        create_token(
+            db=db,
+            user_id=user.id,
+            token=verification_token,
+            token_type=TokenType.EMAIL_VERIFICATION,
+            expires_in_seconds=86400  # 24 hours
+        )
+    except Exception as e:
+        print(f"[WARNING] Failed to store email verification token: {e}")
+        print(f"[DEV] Email verification token for {user.email}: {verification_token}")
     
     # Send verification email
     await send_email_verification_email(user.email, user.username, verification_token)
@@ -117,18 +123,17 @@ async def login(
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
-    # Store refresh token in Redis (if available)
-    from app.database.redis import is_redis_available
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.setex(
-                f"refresh_token:{user.id}",
-                settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
-                refresh_token
-            )
-        except Exception as e:
-            print(f"[WARNING] Failed to store refresh token in Redis: {e}")
+    # Store refresh token in PostgreSQL
+    try:
+        create_token(
+            db=db,
+            user_id=user.id,
+            token=refresh_token,
+            token_type=TokenType.REFRESH_TOKEN,
+            expires_in_seconds=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+        )
+    except Exception as e:
+        print(f"[WARNING] Failed to store refresh token: {e}")
     
     # Get origin from request for cookie domain (if needed)
     origin = request.headers.get("origin")
@@ -224,14 +229,11 @@ async def logout(
         except Exception as e:
             print(f"[WARNING] Failed to deactivate session: {e}")
     
-    # Remove refresh token from Redis (if available)
-    from app.database.redis import is_redis_available
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.delete(f"refresh_token:{current_user.id}")
-        except Exception as e:
-            print(f"[WARNING] Failed to delete refresh token from Redis: {e}")
+    # Remove refresh token from PostgreSQL
+    try:
+        delete_user_tokens(db, current_user.id, TokenType.REFRESH_TOKEN)
+    except Exception as e:
+        print(f"[WARNING] Failed to delete refresh token: {e}")
     
     # Create audit log
     create_audit_log(
@@ -271,25 +273,22 @@ async def refresh_token(
     
     user_id = payload.get("sub")
     
-    # Verify refresh token in Redis (if available)
-    # If Redis is not available, we accept the token if it's a valid JWT (dev mode)
-    from app.database.redis import is_redis_available
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            stored_token = redis_client.get(f"refresh_token:{user_id}")
-            # Only reject if Redis has a stored token AND it doesn't match
-            # If no stored token exists (None), accept it (might be first time or Redis was cleared)
-            if stored_token is not None and stored_token != refresh_token:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid refresh token"
-                )
-        except Exception as e:
-            print(f"[WARNING] Redis error during token verification: {e}")
-            # Continue without Redis verification in dev mode
-    # If Redis is not available, we accept the token if it's valid JWT (already verified above)
-    # This allows the app to work in dev mode without Redis
+    # Verify refresh token in PostgreSQL
+    try:
+        stored_token = get_token(db, refresh_token, TokenType.REFRESH_TOKEN)
+        if not stored_token or stored_token.user_id != int(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[WARNING] Error during token verification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
     
     # Create new access token (sub must be a string for JWT)
     new_access_token = create_access_token(data={"sub": str(user_id)})
@@ -327,21 +326,18 @@ async def request_password_reset(
     # Generate reset token
     reset_token = secrets.token_urlsafe(32)
     
-    # Store reset token in Redis (if available), otherwise skip (dev mode)
-    from app.database.redis import is_redis_available, get_redis
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            token_key = f"password_reset:{reset_token}"
-            redis_client.setex(token_key, 3600, str(user.id))  # 1 hour
-            print(f"[INFO] Password reset token stored for user {user.id} (email: {user.email})")
-            print(f"[DEBUG] Token key: {token_key}, TTL: 3600 seconds (1 hour)")
-        except Exception as e:
-            print(f"[WARNING] Failed to store password reset token in Redis: {e}")
-            # In dev mode without Redis, we'll just print the token
-            print(f"[DEV] Password reset token for {user.email}: {reset_token}")
-    else:
-        print(f"[WARNING] Redis not available - password reset token not stored!")
+    # Store reset token in PostgreSQL (1 hour expiry)
+    try:
+        create_token(
+            db=db,
+            user_id=user.id,
+            token=reset_token,
+            token_type=TokenType.PASSWORD_RESET,
+            expires_in_seconds=3600  # 1 hour
+        )
+        print(f"[INFO] Password reset token stored for user {user.id} (email: {user.email})")
+    except Exception as e:
+        print(f"[WARNING] Failed to store password reset token: {e}")
         print(f"[DEV] Password reset token for {user.email}: {reset_token}")
     
     await send_password_reset_email(user.email, reset_token)
@@ -354,67 +350,16 @@ async def confirm_password_reset(
     db: Session = Depends(get_db)
 ):
     """Confirm password reset"""
-    from app.database.redis import is_redis_available, get_redis
+    # Get token from PostgreSQL
+    verification_token = get_token(db, reset_data.token, TokenType.PASSWORD_RESET)
     
-    user_id = None
-    token_key = f"password_reset:{reset_data.token}"
-    
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            # Try to get the token
-            user_id = redis_client.get(token_key)
-            
-            # If token doesn't exist, check if it might have expired
-            if not user_id:
-                # Check TTL to see if token exists but expired
-                ttl = redis_client.ttl(token_key)
-                if ttl == -2:  # Key doesn't exist
-                    print(f"[DEBUG] Password reset token not found: {reset_data.token[:10]}...")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Invalid or expired reset token. Please request a new password reset link."
-                    )
-                elif ttl == -1:  # Key exists but has no expiration (shouldn't happen)
-                    print(f"[WARNING] Password reset token has no expiration: {reset_data.token[:10]}...")
-                else:
-                    # Token expired (TTL is 0 or negative)
-                    print(f"[DEBUG] Password reset token expired (TTL: {ttl}): {reset_data.token[:10]}...")
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Reset token has expired. Please request a new password reset link."
-                    )
-        except HTTPException:
-            raise
-        except Exception as e:
-            print(f"[WARNING] Redis error during password reset: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error validating reset token. Please try again."
-            )
-    else:
-        # Redis not available - this shouldn't happen in production
-        # But for dev mode, we could add a fallback here if needed
-        print(f"[WARNING] Redis not available for password reset confirmation")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Password reset service temporarily unavailable. Please try again later."
-        )
-    
-    if not user_id:
+    if not verification_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired reset token. Please request a new password reset link."
         )
     
-    try:
-        user = db.query(User).filter(User.id == int(user_id)).first()
-    except (ValueError, TypeError) as e:
-        print(f"[ERROR] Invalid user_id from Redis: {user_id}, Error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid reset token format."
-        )
+    user = db.query(User).filter(User.id == verification_token.user_id).first()
     
     if not user:
         raise HTTPException(
@@ -432,14 +377,12 @@ async def confirm_password_reset(
         status="success"
     )
     
-    # Delete reset token from Redis (if available) - one-time use
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.delete(token_key)
-            print(f"[INFO] Password reset token deleted after successful use")
-        except Exception as e:
-            print(f"[WARNING] Failed to delete reset token from Redis: {e}")
+    # Mark token as used (one-time use)
+    try:
+        mark_token_as_used(db, reset_data.token, TokenType.PASSWORD_RESET)
+        print(f"[INFO] Password reset token marked as used")
+    except Exception as e:
+        print(f"[WARNING] Failed to mark reset token as used: {e}")
     
     return {"message": "Password reset successfully"}
 
@@ -450,23 +393,16 @@ async def verify_email(
     db: Session = Depends(get_db)
 ):
     """Verify user email address"""
-    from app.database.redis import is_redis_available
+    # Get token from PostgreSQL
+    verification_token = get_token(db, verification_data.token, TokenType.EMAIL_VERIFICATION)
     
-    user_id = None
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            user_id = redis_client.get(f"email_verify:{verification_data.token}")
-        except Exception as e:
-            print(f"[WARNING] Redis error during email verification: {e}")
-    
-    if not user_id:
+    if not verification_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired verification token"
         )
     
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.query(User).filter(User.id == verification_token.user_id).first()
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -486,13 +422,11 @@ async def verify_email(
         status="success"
     )
     
-    # Delete verification token from Redis
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.delete(f"email_verify:{verification_data.token}")
-        except Exception as e:
-            print(f"[WARNING] Failed to delete verification token from Redis: {e}")
+    # Mark token as used (one-time use)
+    try:
+        mark_token_as_used(db, verification_data.token, TokenType.EMAIL_VERIFICATION)
+    except Exception as e:
+        print(f"[WARNING] Failed to mark verification token as used: {e}")
     
     return {"message": "Email verified successfully"}
 
@@ -514,15 +448,18 @@ async def resend_verification_email(
     # Generate new verification token
     verification_token = secrets.token_urlsafe(32)
     
-    # Store verification token in Redis (24 hours expiry)
-    from app.database.redis import is_redis_available
-    if is_redis_available():
-        redis_client = get_redis()
-        try:
-            redis_client.setex(f"email_verify:{verification_token}", 86400, str(user.id))  # 24 hours
-        except Exception as e:
-            print(f"[WARNING] Failed to store email verification token in Redis: {e}")
-            print(f"[DEV] Email verification token for {user.email}: {verification_token}")
+    # Store verification token in PostgreSQL (24 hours expiry)
+    try:
+        create_token(
+            db=db,
+            user_id=user.id,
+            token=verification_token,
+            token_type=TokenType.EMAIL_VERIFICATION,
+            expires_in_seconds=86400  # 24 hours
+        )
+    except Exception as e:
+        print(f"[WARNING] Failed to store email verification token: {e}")
+        print(f"[DEV] Email verification token for {user.email}: {verification_token}")
     
     await send_email_verification_email(user.email, user.username, verification_token)
     
