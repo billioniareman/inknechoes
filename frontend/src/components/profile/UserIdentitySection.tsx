@@ -1,5 +1,8 @@
 import { User } from '../../api/users'
 import { Calendar, Heart, Hand, Users, Flame, TrendingUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import FollowButton from '../FollowButton'
+import { FollowStats } from '../../api/follows'
 
 interface UserIdentitySectionProps {
   user: User
@@ -13,9 +16,12 @@ interface UserIdentitySectionProps {
     engagement_score: number
     total_posts: number
   }
+  username?: string
+  followStats?: FollowStats | null
+  onFollowChange?: () => void
 }
 
-export default function UserIdentitySection({ user, stats }: UserIdentitySectionProps) {
+export default function UserIdentitySection({ user, stats, username, followStats, onFollowChange }: UserIdentitySectionProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -56,9 +62,35 @@ export default function UserIdentitySection({ user, stats }: UserIdentitySection
 
         {/* User Info */}
         <div className="flex-1">
-          <h1 className="text-4xl font-serif font-bold text-amber-900 mb-2">
-            {user.username}
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-serif font-bold text-amber-900">
+              {user.username}
+            </h1>
+            <FollowButton
+              username={user.username}
+              initialIsFollowing={followStats?.is_following || false}
+              onFollowChange={onFollowChange}
+            />
+          </div>
+
+          {/* Follow Stats */}
+          {followStats && username && (
+            <div className="flex gap-4 mb-3 text-sm text-amber-700">
+              <Link
+                to={`/user/${username}/followers`}
+                className="hover:text-amber-900 hover:underline"
+              >
+                <span className="font-semibold">{followStats.followers_count}</span> followers
+              </Link>
+              <Link
+                to={`/user/${username}/following`}
+                className="hover:text-amber-900 hover:underline"
+              >
+                <span className="font-semibold">{followStats.following_count}</span> following
+              </Link>
+            </div>
+          )}
+
           <p className="text-lg text-amber-700 italic mb-3">
             {getTagline()}
           </p>
@@ -67,7 +99,7 @@ export default function UserIdentitySection({ user, stats }: UserIdentitySection
               {user.bio}
             </p>
           )}
-          
+
           {/* Genre Tags */}
           {user.genre_tags && (
             <div className="flex flex-wrap gap-2">

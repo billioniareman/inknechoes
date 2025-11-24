@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.database.postgres import Base
 
 
@@ -19,4 +20,9 @@ class User(Base):
     genre_tags = Column(String, nullable=True)  # Comma-separated tags
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Follower relationships - self-referential many-to-many
+    # followers = users who follow this user
+    # following = users this user follows
+    # These will be defined after the followers table is imported in the relationships setup
 
