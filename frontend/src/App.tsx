@@ -21,6 +21,7 @@ import ResetPassword from './pages/ResetPassword'
 import Followers from './pages/Followers'
 import Following from './pages/Following'
 import Notifications from './pages/Notifications'
+import BrowseByTag from './pages/BrowseByTag'
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -84,6 +85,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="discover" element={<Discover />} />
+            <Route path="tags/:tagSlug" element={<BrowseByTag />} />
             <Route
               path="login"
               element={

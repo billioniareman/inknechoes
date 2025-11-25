@@ -9,11 +9,11 @@ from app.database.mongo import connect_to_mongo, close_mongo_connection
 # Import models to ensure they're registered with Base
 from app.models import (
     User, Post, Comment, Chapter, Bookmark, ReadingProgress, 
-    AuditLog, UserPreferences, UserSession, VerificationToken, followers, Notification
+    AuditLog, UserPreferences, UserSession, VerificationToken, followers, Notification, Tag, post_tags
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter
-from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications
+from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications, tags
 import uvicorn
 
 settings = get_settings()
@@ -57,6 +57,7 @@ app.include_router(reading_progress.router, prefix=settings.API_V1_PREFIX)
 app.include_router(feed.router, prefix=settings.API_V1_PREFIX)
 app.include_router(follows.router, prefix=settings.API_V1_PREFIX)
 app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
+app.include_router(tags.router, prefix=settings.API_V1_PREFIX)
 
 from app.services.post_service import create_mongodb_text_index
 

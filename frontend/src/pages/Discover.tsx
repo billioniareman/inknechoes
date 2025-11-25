@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { postsApi, Post } from '../api/posts'
 import PostCard from '../components/PostCard'
+import TrendingTags from '../components/TrendingTags'
 import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function Discover() {
@@ -130,8 +131,8 @@ export default function Discover() {
               key={type.value || 'all'}
               onClick={() => setContentType(type.value)}
               className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${contentType === type.value
-                  ? 'bg-amber-800 text-amber-50'
-                  : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                ? 'bg-amber-800 text-amber-50'
+                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                 }`}
             >
               {type.label}
@@ -235,10 +236,22 @@ export default function Discover() {
           <p className="text-amber-600/70 text-sm mt-2">Try adjusting your filters or check back later.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          </div>
+
+          {/* Sidebar with Trending Tags */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-20">
+              <TrendingTags />
+            </div>
+          </div>
         </div>
       )}
     </div>
