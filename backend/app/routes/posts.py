@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import Optional
 from sqlalchemy.orm import Session
+from datetime import datetime
 from app.database.postgres import get_db
 from app.schemas.post_schema import PostCreate, PostResponse, PostUpdate, PostWithContent, PostListResponse
 from app.services.post_service import (
     create_post, get_post, get_post_by_slug, get_post_content,
-    update_post, delete_post, get_public_posts, get_user_posts
+    update_post, delete_post, get_public_posts, get_user_posts, search_posts_advanced
 )
 from app.utils.dependencies import get_current_user
 from app.models.user import User
@@ -68,6 +69,87 @@ async def get_posts(
         page=page,
         page_size=page_size
     )
+
+
+@router.get("/search", response_model=PostListResponse)
+async def search_posts(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    sort_by: str = Query("latest", regex="^(latest|most_appreciated|oldest)$"),
+    search: Optional[str] = Query(None, description="Search query for titles/content"),
+    author: Optional[str] = Query(None, description="Filter by author username"),
+    content_type: Optional[str] = Query(None, description="Filter by content type (article, poetry, book)"),
+    genre: Optional[str] = Query(None, description="Filter by genre tag"),
+    start_date: Optional[str] = Query(None, description="Filter posts after this date (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="Filter posts before this date (YYYY-MM-DD)"),
+    full_text: bool = Query(False, description="Enable full-text search in post content"),
+    db: Session = Depends(get_db)
+):
+    """
+    Advanced search endpoint with multiple filters:
+    - search: Search in titles and optionally content (if full_text=true)
+    - author: Filter by author username
+    - content_type: Filter by type (article, poetry, book)
+    - genre: Filter by genre tag
+    - start_date/end_date: Filter by date range
+    - sort_by: Sort order (latest, oldest, most_appreciated)
+    - full_text: Search in post body/description (slower but more comprehensive)
+    """
+    skip = (page - 1) * page_size
+    
+    # Parse dates if provided
+    start_datetime = None
+    end_datetime = None
+    if start_date:
+        try:
+            start_datetime = datetime.fromisoformat(start_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid start_date format. Use YYYY-MM-DD")
+    if end_date:
+        try:
+            end_datetime = datetime.fromisoformat(end_date)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid end_date format. Use YYYY-MM-DD")
+    
+    # Execute advanced search
+    posts, total = await search_posts_advanced(
+        db=db,
+        skip=skip,
+        limit=page_size,
+        sort_by=sort_by,
+        search=search,
+        author_username=author,
+        content_type=content_type,
+        genre_tag=genre,
+        start_date=start_datetime,
+        end_date=end_datetime,
+        full_text_search=full_text
+    )
+    
+    # Add author usernames and cover images
+    posts_with_author = []
+    for post in posts:
+        author_user = db.query(User).filter(User.id == post.author_id).first()
+        post_dict = post.__dict__.copy()
+        post_dict['author_username'] = author_user.username if author_user else None
+        
+        # Get cover image from MongoDB
+        try:
+            content = await get_post_content(post.mongo_id)
+            if content:
+                post_dict['cover_image_url'] = content.cover_image_url
+        except:
+            post_dict['cover_image_url'] = None
+        
+        posts_with_author.append(PostResponse(**post_dict))
+    
+    return PostListResponse(
+        posts=posts_with_author,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
 
 
 @router.get("/me", response_model=list[PostResponse])

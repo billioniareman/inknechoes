@@ -9,11 +9,11 @@ from app.database.mongo import connect_to_mongo, close_mongo_connection
 # Import models to ensure they're registered with Base
 from app.models import (
     User, Post, Comment, Chapter, Bookmark, ReadingProgress, 
-    AuditLog, UserPreferences, UserSession, VerificationToken, followers
+    AuditLog, UserPreferences, UserSession, VerificationToken, followers, Notification
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter
-from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows
+from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications
 import uvicorn
 
 settings = get_settings()
@@ -56,19 +56,27 @@ app.include_router(bookmarks.router, prefix=settings.API_V1_PREFIX)
 app.include_router(reading_progress.router, prefix=settings.API_V1_PREFIX)
 app.include_router(feed.router, prefix=settings.API_V1_PREFIX)
 app.include_router(follows.router, prefix=settings.API_V1_PREFIX)
+app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
 
+from app.services.post_service import create_mongodb_text_index
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database connections"""
+    """Initialize database connections and indexes"""
     # Create PostgreSQL tables
     Base.metadata.create_all(bind=engine)
     
     # Connect to MongoDB
     await connect_to_mongo()
+    
+    # Create MongoDB text index for search functionality
+    try:
+        await create_mongodb_text_index()
+        print("✓ MongoDB text index created successfully")
+    except Exception as e:
+        print(f"Text index may already exist or error occurred: {e}")
 
 
-@app.on_event("shutdown")
 async def shutdown_event():
     """Close database connections"""
     await close_mongo_connection()

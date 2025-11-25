@@ -4,6 +4,7 @@ import { useUserStore } from '../store/userStore'
 import { LogOut, PenTool, User, Search, X, Mail, Menu } from 'lucide-react'
 import { authApi } from '../api/auth'
 import { useToast } from '../contexts/ToastContext'
+import NotificationBell from './NotificationBell'
 
 export default function Layout() {
   const { user, isAuthenticated, logout } = useUserStore()
@@ -118,6 +119,7 @@ export default function Layout() {
                   >
                     Settings
                   </Link>
+                  <NotificationBell />
                   <button
                     onClick={handleLogout}
                     className="text-foreground hover:text-primary transition-colors p-1"
@@ -217,6 +219,13 @@ export default function Layout() {
                     className="block px-3 py-2 text-foreground hover:text-primary hover:bg-amber-50 rounded-md transition-colors font-medium"
                   >
                     Settings
+                  </Link>
+                  <Link
+                    to="/notifications"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="block px-3 py-2 text-foreground hover:text-primary hover:bg-amber-50 rounded-md transition-colors font-medium"
+                  >
+                    Notifications
                   </Link>
                   <button
                     onClick={() => {

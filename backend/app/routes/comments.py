@@ -6,6 +6,7 @@ from app.models.comment import Comment
 from app.models.post import Post
 from app.utils.dependencies import get_current_user
 from app.models.user import User
+from app.services.notification_service import notify_new_comment, notify_comment_reply, notify_comment_like
 router = APIRouter(prefix="/comments", tags=["comments"])
 
 
@@ -42,6 +43,28 @@ async def create_comment(
     db.add(comment)
     db.commit()
     db.refresh(comment)
+    
+    # Create notification for post author or parent comment author
+    if comment_data.parent_id:
+        # Reply to comment - notify the parent comment's author
+        parent = db.query(Comment).filter(Comment.id == comment_data.parent_id).first()
+        if parent:
+            notify_comment_reply(
+                db=db,
+                replier_id=current_user.id,
+                original_commenter_id=parent.author_id,
+                post_id=str(post.id),
+                comment_id=comment.id
+            )
+    else:
+        # Top-level comment - notify post author
+        notify_new_comment(
+            db=db,
+            commenter_id=current_user.id,
+            post_author_id=post.author_id,
+            post_id=str(post.id),
+            comment_id=comment.id
+        )
     
     # Add author username and like status
     comment.author_username = current_user.username
@@ -168,6 +191,15 @@ async def like_comment(
         # Like: add user to liked_by and increment count
         comment.liked_by.append(current_user)
         comment.likes_count += 1
+        
+        # Create notification for comment author (only when liking, not unliking)
+        notify_comment_like(
+            db=db,
+            liker_id=current_user.id,
+            comment_author_id=comment.author_id,
+            comment_id=comment.id,
+            post_id=str(comment.post_id)
+        )
     
     db.commit()
     db.refresh(comment)

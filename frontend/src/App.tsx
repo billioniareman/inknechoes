@@ -20,6 +20,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Followers from './pages/Followers'
 import Following from './pages/Following'
+import Notifications from './pages/Notifications'
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -141,6 +142,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />
