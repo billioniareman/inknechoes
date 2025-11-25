@@ -39,4 +39,5 @@ class Post(Base):
     author = relationship("User", backref="posts")
     liked_by = relationship("User", secondary=post_likes, backref="liked_posts")
     clapped_by = relationship("User", secondary=post_claps, backref="clapped_posts")
+    tags = relationship("Tag", secondary="post_tags", back_populates="posts")
 

@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "discover": "Discover",
+    "write": "Write",
+    "myPosts": "My Posts",
+    "admin": "Admin",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "signIn": "Sign In",
+    "signOut": "Logout",
+    "getStarted": "Get Started"
+  },
+  "common": {
+    "search": "Search",
+    "searchStories": "Search stories...",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "fullName": "Full Name",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "verifyEmail": "Verify Email",
+    "resend": "Resend",
+    "verify": "Verify",
+    "emailVerificationRequired": "Please verify your email address",
+    "checkInbox": "Check your inbox for the verification link"
+  },
+  "post": {
+    "readMore": "Read More",
+    "comments": "Comments",
+    "likes": "Likes",
+    "views": "Views",
+    "share": "Share",
+    "published": "Published",
+    "draft": "Draft",
+    "author": "Author",
+    "by": "by",
+    "readTime": "min read"
+  },
+  "footer": {
+    "copyright": "© 2025 Ink&Echoes. A platform for writers and readers."
+  }
+}

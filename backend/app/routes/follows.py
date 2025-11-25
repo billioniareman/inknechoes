@@ -11,6 +11,7 @@ from app.services.follow_service import (
     get_follower_count, get_following_count
 )
 from app.services.auth_service import get_user_by_username
+from app.services.notification_service import notify_new_follower
 from app.utils.dependencies import get_current_user
 from app.models.user import User
 
@@ -47,6 +48,9 @@ async def follow_user_route(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Already following this user"
         )
+    
+    # Create notification for the followed user
+    notify_new_follower(db, follower_id=current_user.id, followed_id=user_to_follow.id)
     
     return {"message": f"Successfully followed {username}"}
 

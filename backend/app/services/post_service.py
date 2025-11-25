@@ -4,7 +4,7 @@ from app.models.user import User
 from app.schemas.post_schema import PostCreate, PostContent
 from app.database.mongo import get_mongo_db
 from bson import ObjectId
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from datetime import datetime, timezone
 
 
@@ -125,8 +125,127 @@ async def delete_post(db: Session, post: Post):
     db.commit()
 
 
+async def search_posts_advanced(
+    db: Session,
+    skip: int = 0,
+    limit: int = 20,
+    sort_by: str = "latest",
+    search: Optional[str] = None,
+    author_username: Optional[str] = None,
+    content_type: Optional[str] = None,
+    genre_tag: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    full_text_search: bool = False
+) -> Tuple[List[Post], int]:
+    """
+    Advanced search with multiple filters and MongoDB full-text search
+    
+    Args:
+        db: Database session
+        skip: Pagination offset
+        limit: Number of results to return
+        sort_by: Sort order (latest, most_appreciated, oldest)
+        search: Search query for titles/content
+        author_username: Filter by author username
+        content_type: Filter by content type (article, poetry, book)
+        genre_tag: Filter by genre tag
+        start_date: Filter posts created after this date
+        end_date: Filter posts created before this date
+        full_text_search: If True, search in MongoDB content as well
+    
+    Returns:
+        Tuple of (posts list, total count)
+    """
+    from sqlalchemy import desc, func, and_
+    
+    # Start with base query for public posts
+    query = db.query(Post).filter(Post.visibility == "public")
+    
+    # Filter by author if specified
+    if author_username:
+        author = db.query(User).filter(User.username == author_username).first()
+        if author:
+            query = query.filter(Post.author_id == author.id)
+        else:
+            # If author not found, return empty results
+            return [], 0
+    
+    # Filter by content type
+    if content_type:
+        query = query.filter(Post.content_type == content_type)
+    
+    # Filter by date range
+    if start_date:
+        query = query.filter(Post.created_at >= start_date)
+    if end_date:
+        query = query.filter(Post.created_at <= end_date)
+    
+    # If we have a search query or genre tag, we need to do MongoDB search
+    mongo_filtered_ids = None
+    if search or genre_tag:
+        mongo_db = get_mongo_db()
+        mongo_query = {}
+        
+        if search and full_text_search:
+            # Full-text search in title, body, and description
+            mongo_query["$text"] = {"$search": search}
+        elif search and genre_tag:
+            # Search in tags for genre and text search in description
+            mongo_query["$and"] = [
+                {"tags": {"$regex": genre_tag, "$options": "i"}},
+                {
+                    "$or": [
+                        {"description": {"$regex": search, "$options": "i"}},
+                        {"body": {"$regex": search, "$options": "i"}}
+                    ]
+                }
+            ]
+        elif search:
+            # Search in description or body
+            mongo_query["$or"] = [
+                {"description": {"$regex": search, "$options": "i"}},
+                {"body": {"$regex": search, "$options": "i"}}
+            ]
+        elif genre_tag:
+            # Filter by genre tag
+            mongo_query["tags"] = {"$regex": genre_tag, "$options": "i"}
+        
+        # Execute MongoDB query
+        mongo_results = mongo_db.posts.find(mongo_query, {"_id": 1})
+        mongo_filtered_ids = [str(doc["_id"]) async for doc in mongo_results]
+        
+        # Filter PostgreSQL query by mongo_ids
+        if mongo_filtered_ids:
+            query = query.filter(Post.mongo_id.in_(mongo_filtered_ids))
+        else:
+            # No results from MongoDB, return empty
+            return [], 0
+    
+    # Title search (PostgreSQL)
+    if search and not full_text_search and not genre_tag:
+        search_term = f"%{search.lower()}%"
+        query = query.filter(func.lower(Post.title).like(search_term))
+    
+    # Sorting
+    if sort_by == "latest":
+        query = query.order_by(Post.created_at.desc())
+    elif sort_by == "oldest":
+        query = query.order_by(Post.created_at.asc())
+    elif sort_by == "most_appreciated":
+        # Sort by total engagement (likes + claps), then by created_at
+        query = query.order_by(
+            desc(Post.likes_count + Post.claps_count),
+            desc(Post.created_at)
+        )
+    
+    total = query.count()
+    posts = query.offset(skip).limit(limit).all()
+    return posts, total
+
+
 def get_public_posts(db: Session, skip: int = 0, limit: int = 20, sort_by: str = "latest", search: Optional[str] = None, content_type: Optional[str] = None) -> tuple[List[Post], int]:
-    """Get public posts with pagination, search, and filtering"""
+    """Get public posts with pagination, search, and filtering (legacy function - use search_posts_advanced for new features)"""
     from sqlalchemy import desc, or_, func
     
     query = db.query(Post).filter(Post.visibility == "public")
@@ -160,3 +279,17 @@ def get_user_posts(db: Session, user_id: int, include_drafts: bool = False) -> L
     if not include_drafts:
         query = query.filter(Post.visibility == "public")
     return query.order_by(Post.created_at.desc()).all()
+
+
+async def create_mongodb_text_index():
+    """Create text index in MongoDB for full-text search"""
+    mongo_db = get_mongo_db()
+    try:
+        # Create text index on body and description fields
+        await mongo_db.posts.create_index([
+            ("body", "text"),
+            ("description", "text")
+        ], name="post_content_text_index")
+        print("✓ MongoDB text index created successfully")
+    except Exception as e:
+        print(f"Text index may already exist or error occurred: {e}")

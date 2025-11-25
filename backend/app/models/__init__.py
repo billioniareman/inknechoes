@@ -10,6 +10,8 @@ from app.models.user_session import UserSession
 from app.models.verification_token import VerificationToken
 from app.models.audit_log import AuditLog
 from app.models.follower import followers
+from app.models.notification import Notification
+from app.models.tag import Tag, post_tags
 
 __all__ = [
     "User",
@@ -25,4 +27,7 @@ __all__ = [
     "VerificationToken",
     "AuditLog",
     "followers",
+    "Notification",
+    "Tag",
+    "post_tags",
 ]

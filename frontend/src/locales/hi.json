@@ -1,0 +1,58 @@
+{
+    "nav": {
+        "discover": "खोजें",
+        "write": "लिखें",
+        "myPosts": "मेरी पोस्ट",
+        "admin": "व्यवस्थापक",
+        "profile": "प्रोफ़ाइल",
+        "settings": "सेटिंग्स",
+        "notifications": "सूचनाएं",
+        "signIn": "साइन इन करें",
+        "signOut": "साइन आउट",
+        "getStarted": "शुरू करें"
+    },
+    "common": {
+        "search": "खोजें",
+        "searchStories": "कहानियाँ खोजें...",
+        "loading": "लोड हो रहा है...",
+        "error": "त्रुटि",
+        "success": "सफलता",
+        "save": "सहेजें",
+        "cancel": "रद्द करें",
+        "delete": "हटाएं",
+        "edit": "संपादित करें",
+        "confirm": "पुष्टि करें",
+        "theme": "थीम",
+        "language": "भाषा"
+    },
+    "auth": {
+        "login": "लॉगिन",
+        "register": "रजिस्टर करें",
+        "email": "ईमेल",
+        "password": "पासवर्ड",
+        "username": "उपयोगकर्ता नाम",
+        "fullName": "पूरा नाम",
+        "forgotPassword": "पासवर्ड भूल गए?",
+        "resetPassword": "पासवर्ड रीसेट करें",
+        "verifyEmail": "ईमेल सत्यापित करें",
+        "resend": "फिर से भेजें",
+        "verify": "सत्यापित करें",
+        "emailVerificationRequired": "कृपया अपना ईमेल पता सत्यापित करें",
+        "checkInbox": "सत्यापन लिंक के लिए अपना इनबॉक्स जांचें"
+    },
+    "post": {
+        "readMore": "और पढ़ें",
+        "comments": "टिप्पणियाँ",
+        "likes": "पसंद",
+        "views": "दृश्य",
+        "share": "साझा करें",
+        "published": "प्रकाशित",
+        "draft": "ड्राफ्ट",
+        "author": "लेखक",
+        "by": "द्वारा",
+        "readTime": "मिनट पढ़ें"
+    },
+    "footer": {
+        "copyright": "© 2025 Ink&Echoes। लेखकों और पाठकों के लिए एक मंच।"
+    }
+}

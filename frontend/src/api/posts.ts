@@ -109,5 +109,33 @@ export const postsApi = {
   deletePost: async (postId: number): Promise<void> => {
     await axiosClient.delete(`/api/v1/posts/${postId}`)
   },
+
+  searchPosts: async (params: {
+    page?: number
+    page_size?: number
+    sort_by?: string
+    search?: string
+    author?: string
+    content_type?: string
+    genre?: string
+    start_date?: string
+    end_date?: string
+    full_text?: boolean
+  }): Promise<PostListResponse> => {
+    const cleanParams: any = {}
+    if (params.page) cleanParams.page = params.page
+    if (params.page_size) cleanParams.page_size = params.page_size
+    if (params.sort_by) cleanParams.sort_by = params.sort_by
+    if (params.search) cleanParams.search = params.search
+    if (params.author) cleanParams.author = params.author
+    if (params.content_type) cleanParams.content_type = params.content_type
+    if (params.genre) cleanParams.genre = params.genre
+    if (params.start_date) cleanParams.start_date = params.start_date
+    if (params.end_date) cleanParams.end_date = params.end_date
+    if (params.full_text !== undefined) cleanParams.full_text = params.full_text
+
+    const response = await axiosClient.get('/api/v1/posts/search', { params: cleanParams })
+    return response.data
+  },
 }
 
