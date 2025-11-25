@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import React from 'react'
 import { useUserStore } from './store/userStore'
 import { ToastProvider } from './contexts/ToastContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import ToastContainer from './components/ToastContainer'
 import Layout from './components/Layout'
 import Home from './pages/Home'
@@ -73,108 +74,110 @@ function App() {
   }, [fetchUser])
 
   return (
-    <ToastProvider>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <ToastContainer />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="discover" element={<Discover />} />
-            <Route path="tags/:tagSlug" element={<BrowseByTag />} />
-            <Route
-              path="login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="register"
-              element={
-                <PublicRoute>
-                  <Register />
-                </PublicRoute>
-              }
-            />
-            <Route path="verify-email" element={<VerifyEmail />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="reset-password" element={<ResetPassword />} />
-            <Route path="post/:slug" element={<PostView />} />
-            <Route path="user/:username" element={<Profile />} />
-            <Route
-              path="write"
-              element={
-                <ProtectedRoute>
-                  <Write />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="write/:postId"
-              element={
-                <ProtectedRoute>
-                  <Write />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="my-posts"
-              element={
-                <ProtectedRoute>
-                  <MyPosts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="admin"
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="user/:username/followers"
-              element={
-                <ProtectedRoute>
-                  <Followers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="user/:username/following"
-              element={
-                <ProtectedRoute>
-                  <Following />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </Router>
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <ToastContainer />
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="discover" element={<Discover />} />
+              <Route path="tags/:tagSlug" element={<BrowseByTag />} />
+              <Route
+                path="login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+              <Route path="verify-email" element={<VerifyEmail />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="post/:slug" element={<PostView />} />
+              <Route path="user/:username" element={<Profile />} />
+              <Route
+                path="write"
+                element={
+                  <ProtectedRoute>
+                    <Write />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="write/:postId"
+                element={
+                  <ProtectedRoute>
+                    <Write />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="my-posts"
+                element={
+                  <ProtectedRoute>
+                    <MyPosts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="user/:username/followers"
+                element={
+                  <ProtectedRoute>
+                    <Followers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="user/:username/following"
+                element={
+                  <ProtectedRoute>
+                    <Following />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+          </Routes>
+        </Router>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 

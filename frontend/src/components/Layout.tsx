@@ -4,9 +4,13 @@ import { useUserStore } from '../store/userStore'
 import { LogOut, PenTool, User, Search, X, Mail, Menu } from 'lucide-react'
 import { authApi } from '../api/auth'
 import { useToast } from '../contexts/ToastContext'
+import { useTranslation } from 'react-i18next'
 import NotificationBell from './NotificationBell'
+import ThemeToggle from './ThemeToggle'
+import LanguageSwitcher from './LanguageSwitcher'
 
 export default function Layout() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, logout } = useUserStore()
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -50,7 +54,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <nav className="border-b border-border/50 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <nav className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between h-14 sm:h-16 items-center gap-2 sm:gap-4">
             <Link to="/" className="flex items-center space-x-1.5 sm:space-x-2 group flex-shrink-0" onClick={() => setShowMobileMenu(false)}>
@@ -68,7 +72,7 @@ export default function Layout() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search stories..."
+                  placeholder={t('common.searchStories')}
                   className="w-full pl-10 pr-4 py-2 text-sm border border-amber-200 rounded-lg bg-white/80 text-amber-900 placeholder-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
@@ -80,7 +84,7 @@ export default function Layout() {
                 to="/discover"
                 className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
               >
-                Discover
+                {t('nav.discover')}
               </Link>
 
               {isAuthenticated ? (
@@ -89,20 +93,20 @@ export default function Layout() {
                     to="/write"
                     className="px-3 lg:px-4 py-1.5 lg:py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity font-medium text-sm lg:text-base"
                   >
-                    Write
+                    {t('nav.write')}
                   </Link>
                   <Link
                     to="/my-posts"
                     className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
                   >
-                    My Posts
+                    {t('nav.myPosts')}
                   </Link>
                   {user?.is_admin && (
                     <Link
                       to="/admin"
                       className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
                     >
-                      Admin
+                      {t('nav.admin')}
                     </Link>
                   )}
                   <Link
@@ -117,8 +121,10 @@ export default function Layout() {
                     className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
                     title="Settings"
                   >
-                    Settings
+                    {t('nav.settings')}
                   </Link>
+                  <LanguageSwitcher />
+                  <ThemeToggle />
                   <NotificationBell />
                   <button
                     onClick={handleLogout}
@@ -134,13 +140,13 @@ export default function Layout() {
                     to="/login"
                     className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
                   >
-                    Sign In
+                    {t('nav.signIn')}
                   </Link>
                   <Link
                     to="/register"
                     className="px-3 lg:px-4 py-1.5 lg:py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity font-medium text-sm lg:text-base"
                   >
-                    Get Started
+                    {t('nav.getStarted')}
                   </Link>
                 </>
               )}
@@ -178,7 +184,7 @@ export default function Layout() {
                 onClick={() => setShowMobileMenu(false)}
                 className="block px-3 py-2 text-foreground hover:text-primary hover:bg-amber-50 rounded-md transition-colors font-medium"
               >
-                Discover
+                {t('nav.discover')}
               </Link>
               {isAuthenticated ? (
                 <>
@@ -218,8 +224,16 @@ export default function Layout() {
                     onClick={() => setShowMobileMenu(false)}
                     className="block px-3 py-2 text-foreground hover:text-primary hover:bg-amber-50 rounded-md transition-colors font-medium"
                   >
-                    Settings
+                    {t('nav.settings')}
                   </Link>
+                  <div className="px-3 py-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{t('common.theme')}</span>
+                    <ThemeToggle />
+                  </div>
+                  <div className="px-3 py-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{t('common.language')}</span>
+                    <LanguageSwitcher />
+                  </div>
                   <Link
                     to="/notifications"
                     onClick={() => setShowMobileMenu(false)}
@@ -270,10 +284,10 @@ export default function Layout() {
                 <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-amber-900 truncate">
-                    Please verify your email address
+                    {t('auth.emailVerificationRequired')}
                   </p>
                   <p className="text-xs text-amber-700 hidden sm:block">
-                    Check your inbox for the verification link
+                    {t('auth.checkInbox')}
                   </p>
                 </div>
               </div>
@@ -283,13 +297,13 @@ export default function Layout() {
                   disabled={resendingVerification}
                   className="text-xs sm:text-sm text-amber-700 hover:text-amber-900 font-medium disabled:opacity-50 whitespace-nowrap px-1 sm:px-2 py-1"
                 >
-                  {resendingVerification ? 'Sending...' : 'Resend'}
+                  {resendingVerification ? t('common.loading') : t('auth.resend')}
                 </button>
                 <Link
                   to="/verify-email"
                   className="text-xs sm:text-sm text-amber-700 hover:text-amber-900 font-medium whitespace-nowrap px-1 sm:px-2 py-1"
                 >
-                  Verify
+                  {t('auth.verify')}
                 </Link>
                 <button
                   onClick={handleDismissVerificationBanner}
@@ -313,7 +327,7 @@ export default function Layout() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search stories..."
+                placeholder={t('common.searchStories')}
                 className="w-full pl-10 pr-10 py-2.5 text-base border border-amber-200 rounded-lg bg-white text-amber-900 placeholder-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 autoFocus
               />
@@ -337,7 +351,7 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 bg-white/50 mt-auto">
+      <footer className="border-t border-border/50 bg-card/50 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <Link to="/" className="flex items-center space-x-2 mb-4 sm:mb-0">
@@ -347,7 +361,7 @@ export default function Layout() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              © 2025 Ink&Echoes. A platform for writers and readers.
+              {t('footer.copyright')}
             </p>
           </div>
         </div>

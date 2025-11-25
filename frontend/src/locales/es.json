@@ -1,0 +1,58 @@
+{
+    "nav": {
+        "discover": "Descubrir",
+        "write": "Escribir",
+        "myPosts": "Mis Publicaciones",
+        "admin": "Administrador",
+        "profile": "Perfil",
+        "settings": "Configuración",
+        "notifications": "Notificaciones",
+        "signIn": "Iniciar Sesión",
+        "signOut": "Cerrar Sesión",
+        "getStarted": "Comenzar"
+    },
+    "common": {
+        "search": "Buscar",
+        "searchStories": "Buscar historias...",
+        "loading": "Cargando...",
+        "error": "Error",
+        "success": "Éxito",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "confirm": "Confirmar",
+        "theme": "Tema",
+        "language": "Idioma"
+    },
+    "auth": {
+        "login": "Iniciar Sesión",
+        "register": "Registrarse",
+        "email": "Correo Electrónico",
+        "password": "Contraseña",
+        "username": "Nombre de Usuario",
+        "fullName": "Nombre Completo",
+        "forgotPassword": "¿Olvidaste tu Contraseña?",
+        "resetPassword": "Restablecer Contraseña",
+        "verifyEmail": "Verificar Correo",
+        "resend": "Reenviar",
+        "verify": "Verificar",
+        "emailVerificationRequired": "Por favor verifica tu dirección de correo electrónico",
+        "checkInbox": "Revisa tu bandeja de entrada para el enlace de verificación"
+    },
+    "post": {
+        "readMore": "Leer Más",
+        "comments": "Comentarios",
+        "likes": "Me Gusta",
+        "views": "Vistas",
+        "share": "Compartir",
+        "published": "Publicado",
+        "draft": "Borrador",
+        "author": "Autor",
+        "by": "por",
+        "readTime": "min de lectura"
+    },
+    "footer": {
+        "copyright": "© 2025 Ink&Echoes. Una plataforma para escritores y lectores."
+    }
+}

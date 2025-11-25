@@ -6,6 +6,8 @@ import CommentSection from '../components/CommentSection'
 import PoetryScroll from '../components/PoetryScroll'
 import BookViewer from '../components/BookViewer'
 import DictionaryPopup from '../components/DictionaryPopup'
+import SEO from '../components/SEO'
+import ShareButtons from '../components/ShareButtons'
 import { useDictionary } from '../hooks/useDictionary'
 import { Heart, Hand } from 'lucide-react'
 
@@ -137,22 +139,40 @@ export default function PostView() {
   if (post.content_type === 'poetry') {
     return (
       <>
+        <SEO
+          title={`${post.title} | Ink&Echoes`}
+          description={post.content.description || post.content.body.substring(0, 200)}
+          image={post.content.cover_image_url}
+          url={`/post/${post.slug}`}
+          type="article"
+          author={post.author_username}
+          publishedTime={post.created_at}
+          tags={post.content.tags}
+        />
         <PoetryScroll
           title={post.title}
           content={post.content.body}
           date={post.created_at}
         />
         <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
+          {/* Share Buttons */}
+          <div className="mb-4">
+            <ShareButtons
+              url={`/post/${post.slug}`}
+              title={post.title}
+              description={post.content.description}
+            />
+          </div>
+
           {/* Engagement buttons */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
             <button
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.is_liked
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
               <span>{engagement?.likes_count || 0}</span>
@@ -160,11 +180,10 @@ export default function PostView() {
             <button
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.has_clapped
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
                   ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{engagement?.claps_count || 0}</span>
@@ -194,6 +213,16 @@ export default function PostView() {
   if (post.content_type === 'book') {
     return (
       <>
+        <SEO
+          title={`${post.title} | Ink&Echoes`}
+          description={post.content.description || post.content.body.substring(0, 200)}
+          image={post.content.cover_image_url}
+          url={`/post/${post.slug}`}
+          type="article"
+          author={post.author_username}
+          publishedTime={post.created_at}
+          tags={post.content.tags}
+        />
         <BookViewer
           title={post.title}
           content={post.content.body}
@@ -203,16 +232,24 @@ export default function PostView() {
           description={post.content.description}
         />
         <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
+          {/* Share Buttons */}
+          <div className="mb-4">
+            <ShareButtons
+              url={`/post/${post.slug}`}
+              title={post.title}
+              description={post.content.description}
+            />
+          </div>
+
           {/* Engagement buttons */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
             <button
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.is_liked
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
               <span>{engagement?.likes_count || 0}</span>
@@ -220,11 +257,10 @@ export default function PostView() {
             <button
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.has_clapped
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
                   ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{engagement?.claps_count || 0}</span>
@@ -253,81 +289,100 @@ export default function PostView() {
 
   // Default article view
   return (
-    <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-      <article>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-amber-900">
-          {post.title}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
-          {new Date(post.created_at).toLocaleDateString()}
-        </p>
+    <>
+      <SEO
+        title={`${post.title} | Ink&Echoes`}
+        description={post.content.description || post.content.body.substring(0, 200)}
+        image={post.content.cover_image_url}
+        url={`/post/${post.slug}`}
+        type="article"
+        author={post.author_username}
+        publishedTime={post.created_at}
+        tags={post.content.tags}
+      />
+      <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
+        <article>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-amber-900">
+            {post.title}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
+            {new Date(post.created_at).toLocaleDateString()}
+          </p>
 
-        {/* Engagement buttons */}
-        {isAuthenticated && (
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 flex-wrap">
-            <button
-              onClick={handleLike}
-              disabled={updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.is_liked
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
-              <span>{engagement?.likes_count || 0}</span>
-            </button>
-            <button
-              onClick={handleClap}
-              disabled={updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${
-                engagement?.has_clapped
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
-            >
-              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>{engagement?.claps_count || 0}</span>
-            </button>
-          </div>
-        )}
-
-        <div
-          className="prose prose-lg max-w-none text-amber-900/90"
-          style={{
-            fontFamily: "'Playfair Display', 'Georgia', serif",
-          }}
-          dangerouslySetInnerHTML={{ __html: post.content.body }}
-        />
-        
-        {/* Dictionary Popup */}
-        {showDictionaryPopup && selectedWord && (
-          <div data-dictionary-popup>
-            <DictionaryPopup
-              word={selectedWord}
-              definition={dictionaryData}
-              position={dictionaryPosition}
-              onClose={closeDictionaryPopup}
-              isLoading={isDictionaryLoading}
+          {/* Share Buttons */}
+          <div className="mb-4">
+            <ShareButtons
+              url={`/post/${post.slug}`}
+              title={post.title}
+              description={post.content.description}
             />
           </div>
-        )}
-        {post.content.tags.length > 0 && (
-          <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap gap-1.5 sm:gap-2">
-            {post.content.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </article>
 
-      <CommentSection postId={post.id} />
-    </div>
+          {/* Engagement buttons */}
+          {isAuthenticated && (
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 flex-wrap">
+              <button
+                onClick={handleLike}
+                disabled={updating}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+              >
+                <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+                <span>{engagement?.likes_count || 0}</span>
+              </button>
+              <button
+                onClick={handleClap}
+                disabled={updating}
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+              >
+                <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>{engagement?.claps_count || 0}</span>
+              </button>
+            </div>
+          )}
+
+          <div
+            className="prose prose-lg max-w-none text-amber-900/90"
+            style={{
+              fontFamily: "'Playfair Display', 'Georgia', serif",
+            }}
+            dangerouslySetInnerHTML={{ __html: post.content.body }}
+          />
+
+          {/* Dictionary Popup */}
+          {showDictionaryPopup && selectedWord && (
+            <div data-dictionary-popup>
+              <DictionaryPopup
+                word={selectedWord}
+                definition={dictionaryData}
+                position={dictionaryPosition}
+                onClose={closeDictionaryPopup}
+                isLoading={isDictionaryLoading}
+              />
+            </div>
+          )}
+          {post.content.tags.length > 0 && (
+            <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap gap-1.5 sm:gap-2">
+              {post.content.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </article>
+
+        <CommentSection postId={post.id} />
+      </div>
+    </>
   )
 }
 
