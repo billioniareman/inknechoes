@@ -12,6 +12,7 @@ from app.models.audit_log import AuditLog
 from app.models.follower import followers
 from app.models.notification import Notification
 from app.models.tag import Tag, post_tags
+from app.models.analytics import PageView
 
 __all__ = [
     "User",
@@ -30,4 +31,5 @@ __all__ = [
     "Notification",
     "Tag",
     "post_tags",
+    "PageView",
 ]

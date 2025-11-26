@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useUserStore } from '../store/userStore'
-import { LogOut, PenTool, User, Search, X, Mail, Menu } from 'lucide-react'
+import { LogOut, PenTool, User, Search, X, Mail, Menu, Rss, BarChart2 } from 'lucide-react'
 import { authApi } from '../api/auth'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from 'react-i18next'
@@ -117,6 +117,13 @@ export default function Layout() {
                     <span>{user?.username}</span>
                   </Link>
                   <Link
+                    to="/analytics"
+                    className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
+                    title="Analytics"
+                  >
+                    <BarChart2 className="h-5 w-5" />
+                  </Link>
+                  <Link
                     to="/settings"
                     className="text-foreground hover:text-primary transition-colors font-medium text-sm lg:text-base"
                     title="Settings"
@@ -218,6 +225,13 @@ export default function Layout() {
                   >
                     <User className="h-4 w-4" />
                     <span>{user?.username}</span>
+                  </Link>
+                  <Link
+                    to="/analytics"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="block px-3 py-2 text-foreground hover:text-primary hover:bg-amber-50 rounded-md transition-colors font-medium"
+                  >
+                    Analytics
                   </Link>
                   <Link
                     to="/settings"
@@ -360,9 +374,21 @@ export default function Layout() {
                 Ink<span className="text-primary">&</span>Echoes
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              {t('footer.copyright')}
-            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="http://localhost:8000/api/v1/rss/global"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                title="RSS Feed"
+              >
+                <Rss className="h-4 w-4" />
+                <span className="hidden sm:inline">RSS</span>
+              </a>
+              <p className="text-sm text-muted-foreground">
+                {t('footer.copyright')}
+              </p>
+            </div>
           </div>
         </div>
       </footer>

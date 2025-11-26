@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter
-from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications, tags
+from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications, tags, rss, analytics, export
 import uvicorn
 
 settings = get_settings()
@@ -58,6 +58,9 @@ app.include_router(feed.router, prefix=settings.API_V1_PREFIX)
 app.include_router(follows.router, prefix=settings.API_V1_PREFIX)
 app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
 app.include_router(tags.router, prefix=settings.API_V1_PREFIX)
+app.include_router(rss.router, prefix=settings.API_V1_PREFIX)
+app.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
+app.include_router(export.router, prefix=settings.API_V1_PREFIX)
 
 from app.services.post_service import create_mongodb_text_index
 
