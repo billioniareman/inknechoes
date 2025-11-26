@@ -102,7 +102,7 @@ async def get_user_analytics_route(
 ):
     """Get comprehensive analytics for a user"""
     from app.services.auth_service import get_user_by_username
-    from app.services.analytics_service import get_user_analytics
+    from app.services.analytics_service import get_author_analytics
     
     user = get_user_by_username(db, username)
     if not user:
@@ -111,7 +111,7 @@ async def get_user_analytics_route(
             detail="User not found"
         )
     
-    analytics = await get_user_analytics(db, user.id)
+    analytics = get_author_analytics(db, user.id)
     return analytics
 
 

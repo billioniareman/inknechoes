@@ -7,7 +7,7 @@ from app.config import get_settings
 import email.utils
 
 settings = get_settings()
-BASE_URL = "http://localhost:3000"  # Should ideally come from settings
+BASE_URL = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
 
 def format_rfc822_date(dt: datetime) -> str:
     """Format datetime to RFC 822 (standard for RSS)"""
