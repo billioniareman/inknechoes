@@ -23,6 +23,7 @@ import Followers from './pages/Followers'
 import Following from './pages/Following'
 import Notifications from './pages/Notifications'
 import BrowseByTag from './pages/BrowseByTag'
+import AnalyticsDashboard from './pages/AnalyticsDashboard'
 
 // Protected route component
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -158,6 +159,14 @@ function App() {
                 }
               />
               <Route
+                path="analytics"
+                element={
+                  <ProtectedRoute>
+                    <AnalyticsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="user/:username/followers"
                 element={
                   <ProtectedRoute>
@@ -182,4 +191,3 @@ function App() {
 }
 
 export default App
-

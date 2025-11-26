@@ -87,4 +87,55 @@ async def get_current_admin(
         )
     return current_user
 
+
+from typing import Optional
+
+async def get_optional_current_user(
+    request: Request,
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """Get current authenticated user if available, otherwise None"""
+    # Try to get access token from Authorization header first
+    authorization = request.headers.get("Authorization")
+    access_token = None
+    
+    if authorization and authorization.startswith("Bearer "):
+        access_token = authorization.split("Bearer ")[1]
+    else:
+        # Fallback to cookies
+        access_token = request.cookies.get("access_token")
+    
+    if not access_token:
+        return None
+    
+    # URL decode the token if needed
+    import urllib.parse
+    try:
+        access_token = urllib.parse.unquote(access_token)
+    except:
+        pass
+    
+    # Verify token
+    payload = verify_token(access_token, token_type="access")
+    if payload is None:
+        return None
+    
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        return None
+    
+    try:
+        user_id: int = int(user_id_str)
+    except (ValueError, TypeError):
+        return None
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return None
+    
+    if not user.is_active:
+        return None
+    
+    return user
+
     

@@ -10,6 +10,7 @@ import WritingAnalytics from '../components/profile/WritingAnalytics'
 import ReadingAnalytics from '../components/profile/ReadingAnalytics'
 import LanguageStyleInsights from '../components/profile/LanguageStyleInsights'
 import ActivityHeatmap from '../components/profile/ActivityHeatmap'
+import { Rss } from 'lucide-react'
 
 export default function Profile() {
   const { username } = useParams<{ username: string }>()
@@ -82,15 +83,26 @@ export default function Profile() {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900">
                   {user.username}
                 </h1>
-                <FollowButton
-                  username={user.username}
-                  initialIsFollowing={followStats?.is_following || false}
-                  onFollowChange={async () => {
-                    // Refresh follow stats after follow/unfollow
-                    const newStats = await getFollowStats(username!).catch(() => null);
-                    if (newStats) setFollowStats(newStats);
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`http://localhost:8000/api/v1/rss/user/${user.username}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-amber-600 hover:bg-amber-100 rounded-full transition-colors"
+                    title="RSS Feed"
+                  >
+                    <Rss className="w-5 h-5" />
+                  </a>
+                  <FollowButton
+                    username={user.username}
+                    initialIsFollowing={followStats?.is_following || false}
+                    onFollowChange={async () => {
+                      // Refresh follow stats after follow/unfollow
+                      const newStats = await getFollowStats(username!).catch(() => null);
+                      if (newStats) setFollowStats(newStats);
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Follow Stats */}

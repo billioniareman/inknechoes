@@ -9,7 +9,8 @@ import DictionaryPopup from '../components/DictionaryPopup'
 import SEO from '../components/SEO'
 import ShareButtons from '../components/ShareButtons'
 import { useDictionary } from '../hooks/useDictionary'
-import { Heart, Hand } from 'lucide-react'
+import { useAnalytics } from '../hooks/useAnalytics'
+import { Heart, Hand, FileText, BookOpen } from 'lucide-react'
 
 export default function PostView() {
   const { slug } = useParams<{ slug: string }>()
@@ -123,6 +124,9 @@ export default function PostView() {
     }
   }
 
+  // Track analytics
+  useAnalytics(post?.id)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -155,13 +159,36 @@ export default function PostView() {
           date={post.created_at}
         />
         <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-          {/* Share Buttons */}
-          <div className="mb-4">
+          {/* Share & Download Buttons */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <ShareButtons
               url={`/post/${post.slug}`}
               title={post.title}
               description={post.content.description}
             />
+
+            <div className="flex items-center gap-2">
+              <a
+                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download PDF"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </a>
+              <a
+                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download EPUB"
+              >
+                <BookOpen className="w-4 h-4" />
+                EPUB
+              </a>
+            </div>
           </div>
 
           {/* Engagement buttons */}
@@ -170,8 +197,8 @@ export default function PostView() {
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
@@ -181,8 +208,8 @@ export default function PostView() {
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -232,13 +259,36 @@ export default function PostView() {
           description={post.content.description}
         />
         <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-          {/* Share Buttons */}
-          <div className="mb-4">
+          {/* Share & Download Buttons */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <ShareButtons
               url={`/post/${post.slug}`}
               title={post.title}
               description={post.content.description}
             />
+
+            <div className="flex items-center gap-2">
+              <a
+                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download PDF"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </a>
+              <a
+                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download EPUB"
+              >
+                <BookOpen className="w-4 h-4" />
+                EPUB
+              </a>
+            </div>
           </div>
 
           {/* Engagement buttons */}
@@ -247,8 +297,8 @@ export default function PostView() {
               onClick={handleLike}
               disabled={!isAuthenticated || updating}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
@@ -258,8 +308,8 @@ export default function PostView() {
               onClick={handleClap}
               disabled={!isAuthenticated || updating}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -309,13 +359,36 @@ export default function PostView() {
             {new Date(post.created_at).toLocaleDateString()}
           </p>
 
-          {/* Share Buttons */}
-          <div className="mb-4">
+          {/* Share & Download Buttons */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <ShareButtons
               url={`/post/${post.slug}`}
               title={post.title}
               description={post.content.description}
             />
+
+            <div className="flex items-center gap-2">
+              <a
+                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download PDF"
+              >
+                <FileText className="w-4 h-4" />
+                PDF
+              </a>
+              <a
+                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
+                title="Download EPUB"
+              >
+                <BookOpen className="w-4 h-4" />
+                EPUB
+              </a>
+            </div>
           </div>
 
           {/* Engagement buttons */}
@@ -325,8 +398,8 @@ export default function PostView() {
                 onClick={handleLike}
                 disabled={updating}
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
               >
                 <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
@@ -336,8 +409,8 @@ export default function PostView() {
                 onClick={handleClap}
                 disabled={updating}
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
               >
                 <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -385,4 +458,3 @@ export default function PostView() {
     </>
   )
 }
-
