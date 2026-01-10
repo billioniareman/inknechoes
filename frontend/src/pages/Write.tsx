@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { postsApi, PostCreate, PostUpdate } from '../api/posts'
 import { chaptersApi } from '../api/chapters'
 import TiptapEditor from '../components/Editor/TiptapEditor'
+import CollaboratorsBar from '../components/Collaborators/CollaboratorsBar'
 import { useToast } from '../contexts/ToastContext'
 import { Plus, X, GripVertical, Save, CheckCircle } from 'lucide-react'
 
@@ -29,6 +30,9 @@ export default function Write() {
   const [contentType, setContentType] = useState('article')
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [activeChapterIndex, setActiveChapterIndex] = useState<number | null>(null)
+  const [chapterCollabMap, setChapterCollabMap] = useState<Record<number, number>>({}) // chapterId -> collabId mapping
+  const [authorId, setAuthorId] = useState<number | null>(null)
+
   const [publishing, setPublishing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
@@ -44,6 +48,7 @@ export default function Write() {
         const post = await postsApi.getPost(Number(postId))
         setIsEditing(true)
         setCurrentPostId(post.id)
+        setAuthorId(post.author_id ?? null)
         setTitle(post.title)
         setSlug(post.slug)
         setVisibility(post.visibility)
@@ -196,6 +201,25 @@ export default function Write() {
     updated[index] = { ...updated[index], [field]: value }
     setChapters(updated)
   }
+
+  // Ensure collaboration entry exists for active chapter
+  useEffect(() => {
+    const ensureCollabForChapter = async () => {
+      if (activeChapterIndex === null) return
+      const chapter = chapters[activeChapterIndex]
+      if (!chapter || !chapter.id || !currentPostId) return
+      if (chapterCollabMap[chapter.id]) return
+
+      try {
+        const data = await (await import('../api/collaboration')).collaborationApi.createOrGetCollab(currentPostId, chapter.id)
+        setChapterCollabMap(prev => ({ ...prev, [chapter.id!]: data.collab_id }))
+      } catch (e) {
+        console.error('Failed to ensure collab for chapter', e)
+      }
+    }
+
+    ensureCollabForChapter()
+  }, [activeChapterIndex, chapters, currentPostId, chapterCollabMap])
 
   const handleSave = async () => {
     if (!title) {
@@ -464,13 +488,21 @@ export default function Write() {
           <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-serif font-semibold text-amber-900">Chapters</h2>
-              <button
-                onClick={addChapter}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Chapter
-              </button>
+              <div className="flex items-center gap-3">
+                <CollaboratorsBar
+                  collabId={activeChapterIndex !== null && chapters[activeChapterIndex]?.id ? chapterCollabMap[chapters[activeChapterIndex].id!] : undefined}
+                  bookId={currentPostId || undefined}
+                  chapterId={activeChapterIndex !== null ? chapters[activeChapterIndex].id : undefined}
+                  ownerId={authorId ?? undefined}
+                />
+                <button
+                  onClick={addChapter}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Chapter
+                </button>
+              </div>
             </div>
 
             {chapters.length === 0 ? (
@@ -532,6 +564,9 @@ export default function Write() {
                         content={chapters[activeChapterIndex].content}
                         onChange={(content) => updateChapter(activeChapterIndex, 'content', content)}
                         placeholder="Write your chapter content..."
+                        bookId={currentPostId || undefined}
+                        chapterId={chapters[activeChapterIndex].id || undefined}
+                        collabId={chapters[activeChapterIndex].id ? chapterCollabMap[chapters[activeChapterIndex].id!] : undefined}
                       />
                     </div>
                   </div>
