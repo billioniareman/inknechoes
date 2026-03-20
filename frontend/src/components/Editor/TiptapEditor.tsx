@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Editor } from '@tiptap/react'
+import { EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import Toolbar from './Toolbar'
@@ -81,7 +81,7 @@ export default function TiptapEditor({
 
       try {
         // Dynamic imports to avoid adding required deps unless feature used
-        const Y = (await import('yjs')).default
+        const Y = await import('yjs')
         const { WebsocketProvider } = await import('y-websocket')
         const Collaboration = (await import('@tiptap/extension-collaboration')).default
         const CollaborationCursor = (await import('@tiptap/extension-collaboration-cursor')).default
@@ -177,7 +177,7 @@ export default function TiptapEditor({
         saveInterval = setInterval(async () => {
           try {
             const update = Y.encodeStateAsUpdate(ydoc)
-            const b64 = btoa(String.fromCharCode(...Array.from(update)))
+            const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
             // prefer collabId from props if available
             const targetCollabId = effectiveCollabId
             if (!targetCollabId) return
@@ -199,7 +199,7 @@ export default function TiptapEditor({
           saveDebounceTimer = setTimeout(async () => {
             try {
               const update = Y.encodeStateAsUpdate(ydoc)
-              const b64 = btoa(String.fromCharCode(...Array.from(update)))
+              const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
               const targetCollabId = effectiveCollabId
               if (!targetCollabId) return
               await fetch(`${baseUrl}/api/v1/collab/${targetCollabId}/snapshot`, {
