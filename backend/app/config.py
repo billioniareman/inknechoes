@@ -13,9 +13,7 @@ class Settings(BaseSettings):
     @property
     def POSTGRES_URL(self) -> str:
         """Get PostgreSQL URL from environment or use default"""
-        db_url = os.getenv('POSTGRES_URL') or "postgresql://postgres:ayush@localhost:5432/postgres"
-        print(f"DEBUG: Using database URL: {db_url}")
-        return db_url
+        return os.getenv('POSTGRES_URL') or "postgresql://postgres:ayush@localhost:5432/postgres"
     
     @property
     def MONGO_URI(self) -> str:
@@ -75,8 +73,6 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
-    print("DEBUG: Loading settings...")
     settings = Settings()
-    print(f"DEBUG: POSTGRES_URL = {settings.POSTGRES_URL}")
     return settings
 
