@@ -27,3 +27,4 @@ class VerificationToken(Base):
     # Relationship
     user = relationship("User", backref="verification_tokens")
 
+    

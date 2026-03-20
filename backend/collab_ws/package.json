@@ -1,0 +1,11 @@
+{
+  "name": "inknechoes-collab-ws",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "dependencies": {
+    "y-websocket": "^1.4.5",
+    "node-fetch": "^2.6.7",
+    "ws": "^8.12.1"
+  }
+}

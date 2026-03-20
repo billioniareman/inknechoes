@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter
-from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications, tags, rss, analytics, export
+from app.routes import auth, posts, comments, users, admin, chapters, bookmarks, reading_progress, feed, follows, notifications, tags, rss, analytics, export, collaboration
 import uvicorn
 
 settings = get_settings()
@@ -45,6 +45,34 @@ app.middleware("http")(log_requests)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Development: ensure CORS headers are present even on error responses or OPTIONS preflight
+from fastapi import Request, Response
+
+@app.middleware("http")
+async def dev_cors_middleware(request: Request, call_next):
+    """Add permissive CORS headers in development and handle OPTIONS preflight."""
+    origin = request.headers.get("origin")
+
+    # Handle OPTIONS preflight quickly
+    if request.method == "OPTIONS":
+        resp = Response(status_code=200)
+        if settings.ENV == "development" and origin:
+            resp.headers["Access-Control-Allow-Origin"] = origin
+            resp.headers["Access-Control-Allow-Credentials"] = "true"
+            resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
+            resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+        return resp
+
+    response = await call_next(request)
+
+    # For development, echo back the origin to allow requests from the frontend dev server
+    if settings.ENV == "development" and origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+    return response
+
 # Include routers
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(posts.router, prefix=settings.API_V1_PREFIX)
@@ -61,6 +89,7 @@ app.include_router(tags.router, prefix=settings.API_V1_PREFIX)
 app.include_router(rss.router, prefix=settings.API_V1_PREFIX)
 app.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
 app.include_router(export.router, prefix=settings.API_V1_PREFIX)
+app.include_router(collaboration.router, prefix=settings.API_V1_PREFIX)
 
 from app.services.post_service import create_mongodb_text_index
 
