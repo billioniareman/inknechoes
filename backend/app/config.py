@@ -10,8 +10,14 @@ class Settings(BaseSettings):
     ENV: str = "development"
     FRONTEND_URL: str = "inknechoes.vercel.app"
     # Database URLs
-    POSTGRES_URL: str = "postgresql://postgres:ayush@localhost:5432/postgres"
-    MONGO_URI: str = "mongodb://localhost:27017/inknechoes"
+    POSTGRES_URL: str = Field(
+        default="postgresql://postgres:ayush@localhost:5432/postgres",
+        validation_alias="DATABASE_URL"
+    )
+    MONGO_URI: str = Field(
+        default="mongodb://localhost:27017/inknechoes",
+        validation_alias="MONGO_URL"
+    )
     
     # Cloudinary (for free tier image storage)
     CLOUDINARY_CLOUD_NAME: str = ""
