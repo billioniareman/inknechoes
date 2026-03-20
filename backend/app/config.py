@@ -74,7 +74,9 @@ class Settings(BaseSettings):
         return origins if origins else ["http://localhost:5173"]
 
 
-@lru_cache()
 def get_settings() -> Settings:
-    return Settings()
+    print("DEBUG: Loading settings...")
+    settings = Settings()
+    print(f"DEBUG: POSTGRES_URL = {settings.POSTGRES_URL}")
+    return settings
 

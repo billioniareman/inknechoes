@@ -5,6 +5,7 @@ from app.config import get_settings
 
 settings = get_settings()
 
+print(f"DEBUG: Creating engine with URL: {settings.POSTGRES_URL}")
 engine = create_engine(settings.POSTGRES_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
