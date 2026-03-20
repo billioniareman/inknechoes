@@ -97,10 +97,20 @@ from app.services.post_service import create_mongodb_text_index
 async def startup_event():
     """Initialize database connections and indexes"""
     # Create PostgreSQL tables
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✓ PostgreSQL tables created successfully")
+    except Exception as e:
+        print(f"✗ PostgreSQL connection failed: {e}")
+        print("⚠️  Continuing without PostgreSQL - some features may not work")
     
     # Connect to MongoDB
-    await connect_to_mongo()
+    try:
+        await connect_to_mongo()
+        print("✓ MongoDB connected successfully")
+    except Exception as e:
+        print(f"✗ MongoDB connection failed: {e}")
+        print("⚠️  Continuing without MongoDB - some features may not work")
     
     # Create MongoDB text index for search functionality
     try:
