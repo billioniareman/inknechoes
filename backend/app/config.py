@@ -62,13 +62,11 @@ class Settings(BaseSettings):
     @property
     def CORS_ORIGINS(self) -> List[str]:
         """Parse comma-separated CORS origins string into list"""
-        # Get from field or environment variable
-        cors_str = self.cors_origins_str or os.getenv('CORS_ORIGINS', "http://localhost:5173")
-        if not cors_str:
+        if not self.cors_origins_str:
             # Default to localhost for local development
             return ["http://localhost:5173"]
         # Parse comma-separated string and strip whitespace
-        origins = [origin.strip() for origin in cors_str.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.cors_origins_str.split(",") if origin.strip()]
         return origins if origins else ["http://localhost:5173"]
 
 
