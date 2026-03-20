@@ -10,14 +10,17 @@ class Settings(BaseSettings):
     ENV: str = "development"
     FRONTEND_URL: str = "inknechoes.vercel.app"
     # Database URLs
-    POSTGRES_URL: str = Field(
-        default="postgresql://postgres:ayush@localhost:5432/postgres",
-        validation_alias="DATABASE_URL"
-    )
-    MONGO_URI: str = Field(
-        default="mongodb://localhost:27017/inknechoes",
-        validation_alias="MONGO_URL"
-    )
+    @property
+    def POSTGRES_URL(self) -> str:
+        """Get PostgreSQL URL from environment or use default"""
+        db_url = os.getenv('POSTGRES_URL') or "postgresql://postgres:ayush@localhost:5432/postgres"
+        print(f"DEBUG: Using database URL: {db_url}")
+        return db_url
+    
+    @property
+    def MONGO_URI(self) -> str:
+        """Get MongoDB URI from environment or use default"""
+        return os.getenv('MONGO_URI') or "mongodb://localhost:27017/inknechoes"
     
     # Cloudinary (for free tier image storage)
     CLOUDINARY_CLOUD_NAME: str = ""
