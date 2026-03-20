@@ -49,28 +49,29 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 from fastapi import Request, Response
 
 @app.middleware("http")
-async def dev_cors_middleware(request: Request, call_next):
-    """Add permissive CORS headers in development and handle OPTIONS preflight."""
+async def universal_cors_middleware(request: Request, call_next):
+    """Add universal CORS headers for all environments and handle OPTIONS preflight."""
     origin = request.headers.get("origin")
 
     # Handle OPTIONS preflight quickly
     if request.method == "OPTIONS":
         resp = Response(status_code=200)
-        if settings.ENV == "development" and origin:
+        if origin:
             resp.headers["Access-Control-Allow-Origin"] = origin
             resp.headers["Access-Control-Allow-Credentials"] = "true"
-            resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
-            resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+            resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type,X-Requested-With,Accept,Origin"
+            resp.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS,PATCH"
         return resp
 
     response = await call_next(request)
 
-    # For development, echo back the origin to allow requests from the frontend dev server
-    if settings.ENV == "development" and origin:
+    # Add CORS headers for all environments
+    if origin:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type,X-Requested-With,Accept,Origin"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+    
     return response
 
 # Include routers
