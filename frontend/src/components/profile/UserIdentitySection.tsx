@@ -52,20 +52,25 @@ export default function UserIdentitySection({ user, stats, username, followStats
   }
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-stone-50 to-amber-50 border border-amber-200/50 rounded-lg shadow-lg p-8 mb-8">
+    <div className="bg-card border border-border/80 rounded-2xl shadow-sm p-6 sm:p-8 mb-8 transition-colors">
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
         {/* Profile Picture Placeholder */}
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-3xl font-serif font-bold shadow-lg">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-literary/15 border-2 border-border/80 flex items-center justify-center text-literary text-2xl sm:text-3xl font-serif font-bold shadow-inner flex-shrink-0">
           {user.username.charAt(0).toUpperCase()}
         </div>
 
         {/* User Info */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-serif font-bold text-amber-900">
-              {user.username}
-            </h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-serif font-bold text-foreground tracking-tight">
+                {user.username}
+              </h1>
+              <p className="text-base text-literary italic mt-1">
+                {getTagline()}
+              </p>
+            </div>
             <FollowButton
               username={user.username}
               initialIsFollowing={followStats?.is_following || false}
@@ -75,27 +80,25 @@ export default function UserIdentitySection({ user, stats, username, followStats
 
           {/* Follow Stats */}
           {followStats && username && (
-            <div className="flex gap-4 mb-3 text-sm text-amber-700">
+            <div className="flex gap-4 mb-3 text-sm text-muted-foreground">
               <Link
                 to={`/user/${username}/followers`}
-                className="hover:text-amber-900 hover:underline"
+                className="hover:text-foreground transition-colors"
               >
-                <span className="font-semibold">{followStats.followers_count}</span> followers
+                <span className="font-semibold text-foreground">{followStats.followers_count}</span> followers
               </Link>
+              <span className="text-border">·</span>
               <Link
                 to={`/user/${username}/following`}
-                className="hover:text-amber-900 hover:underline"
+                className="hover:text-foreground transition-colors"
               >
-                <span className="font-semibold">{followStats.following_count}</span> following
+                <span className="font-semibold text-foreground">{followStats.following_count}</span> following
               </Link>
             </div>
           )}
 
-          <p className="text-lg text-amber-700 italic mb-3">
-            {getTagline()}
-          </p>
           {user.bio && (
-            <p className="text-amber-800/80 mb-4 max-w-2xl">
+            <p className="text-foreground/80 text-sm sm:text-base leading-relaxed mb-4 max-w-2xl font-serif">
               {user.bio}
             </p>
           )}
@@ -106,7 +109,7 @@ export default function UserIdentitySection({ user, stats, username, followStats
               {user.genre_tags.split(',').map((tag, idx) => (
                 <span
                   key={idx}
-                  className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium border border-amber-200"
+                  className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-sans tracking-wide uppercase border border-border/60"
                 >
                   {tag.trim()}
                 </span>
@@ -117,75 +120,75 @@ export default function UserIdentitySection({ user, stats, username, followStats
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-amber-200/50">
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Calendar className="w-4 h-4" />
-            <span className="text-xs font-medium">Joined</span>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-border/70">
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <Calendar className="w-4 h-4 text-literary" />
+            <span className="text-xs font-sans tracking-wide uppercase">Joined</span>
           </div>
-          <p className="text-lg font-semibold text-amber-900">
+          <p className="text-base sm:text-lg font-serif font-semibold text-foreground">
             {formatDate(stats.join_date)}
           </p>
         </div>
 
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Heart className="w-4 h-4" />
-            <span className="text-xs font-medium">Total Reads</span>
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <Heart className="w-4 h-4 text-terracotta" />
+            <span className="text-xs font-sans tracking-wide uppercase">Total Reads</span>
           </div>
-          <p className="text-lg font-semibold text-amber-900">
+          <p className="text-base sm:text-lg font-serif font-semibold text-foreground">
             {stats.total_reads.toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Hand className="w-4 h-4" />
-            <span className="text-xs font-medium">Total Likes</span>
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <Hand className="w-4 h-4 text-literary" />
+            <span className="text-xs font-sans tracking-wide uppercase">Total Likes</span>
           </div>
-          <p className="text-lg font-semibold text-amber-900">
+          <p className="text-base sm:text-lg font-serif font-semibold text-foreground">
             {stats.total_likes.toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Users className="w-4 h-4" />
-            <span className="text-xs font-medium">Followers</span>
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <Users className="w-4 h-4 text-sage" />
+            <span className="text-xs font-sans tracking-wide uppercase">Followers</span>
           </div>
-          <p className="text-lg font-semibold text-amber-900">
+          <p className="text-base sm:text-lg font-serif font-semibold text-foreground">
             {stats.total_followers.toLocaleString()}
           </p>
         </div>
       </div>
 
       {/* Engagement Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <Flame className="w-4 h-4" />
-            <span className="text-xs font-medium">Writing Streak</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <Flame className="w-4 h-4 text-terracotta" />
+            <span className="text-xs font-sans tracking-wide uppercase">Writing Streak</span>
           </div>
-          <p className="text-2xl font-bold text-amber-900">
-            {stats.writing_streak} days
+          <p className="text-2xl font-serif font-bold text-foreground">
+            {stats.writing_streak} <span className="text-sm font-sans font-normal text-muted-foreground">days</span>
           </p>
         </div>
 
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-xs font-medium">Engagement Score</span>
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <TrendingUp className="w-4 h-4 text-literary" />
+            <span className="text-xs font-sans tracking-wide uppercase">Engagement Score</span>
           </div>
-          <p className="text-2xl font-bold text-amber-900">
+          <p className="text-2xl font-serif font-bold text-foreground">
             {stats.engagement_score}
           </p>
         </div>
 
-        <div className="bg-white/60 rounded-lg p-4 border border-amber-100">
-          <div className="flex items-center gap-2 text-amber-700 mb-2">
-            <span className="text-xs font-medium">Total Posts</span>
+        <div className="bg-background/80 rounded-xl p-4 border border-border/60">
+          <div className="flex items-center gap-2 text-muted-foreground mb-1.5">
+            <span className="text-xs font-sans tracking-wide uppercase">Total Publications</span>
           </div>
-          <p className="text-2xl font-bold text-amber-900">
+          <p className="text-2xl font-serif font-bold text-foreground">
             {stats.total_posts}
           </p>
         </div>

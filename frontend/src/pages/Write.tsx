@@ -1,11 +1,27 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { postsApi, PostCreate, PostUpdate } from '../api/posts'
 import { chaptersApi } from '../api/chapters'
 import TiptapEditor from '../components/Editor/TiptapEditor'
 import CollaboratorsBar from '../components/Collaborators/CollaboratorsBar'
+import PublishModal from '../components/PublishModal'
 import { useToast } from '../contexts/ToastContext'
-import { Plus, X, GripVertical, Save, CheckCircle } from 'lucide-react'
+import {
+  Feather,
+  Plus,
+  Trash2,
+  CheckCircle,
+  Eye,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Maximize2,
+  Minimize2,
+  BookOpen,
+  Sparkles,
+  FileText,
+  ArrowLeft,
+  Cloud
+} from 'lucide-react'
 
 interface Chapter {
   id?: number
@@ -17,7 +33,8 @@ interface Chapter {
 export default function Write() {
   const navigate = useNavigate()
   const { postId } = useParams<{ postId?: string }>()
-  const { success, error: showError } = useToast()
+  const { showToast } = useToast()
+
   const [isEditing, setIsEditing] = useState(false)
   const [currentPostId, setCurrentPostId] = useState<number | null>(null)
   const [title, setTitle] = useState('')
@@ -26,23 +43,41 @@ export default function Write() {
   const [tags, setTags] = useState('')
   const [description, setDescription] = useState('')
   const [coverImageUrl, setCoverImageUrl] = useState('')
-  const [visibility, setVisibility] = useState('public')
-  const [contentType, setContentType] = useState('article')
+  const [visibility, setVisibility] = useState('draft')
+  const [contentType, setContentType] = useState('story')
   const [chapters, setChapters] = useState<Chapter[]>([])
   const [activeChapterIndex, setActiveChapterIndex] = useState<number | null>(null)
-  const [chapterCollabMap, setChapterCollabMap] = useState<Record<number, number>>({}) // chapterId -> collabId mapping
   const [authorId, setAuthorId] = useState<number | null>(null)
 
-  const [publishing, setPublishing] = useState(false)
+  // Studio UX states
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true)
+  const [focusMode, setFocusMode] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  // Parse type from URL query if creating new
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const typeParam = searchParams.get('type')
+    if (typeParam && !postId) {
+      if (typeParam === 'poem') setContentType('poem')
+      else if (typeParam === 'book') {
+        setContentType('book')
+        if (chapters.length === 0) {
+          setChapters([{ title: 'Chapter 1: The Beginning', order: 1, content: '' }])
+          setActiveChapterIndex(0)
+        }
+      } else if (typeParam === 'journal') setContentType('journal')
+      else if (typeParam === 'story') setContentType('story')
+    }
+  }, [postId])
 
   // Load existing post if editing
   useEffect(() => {
     const loadPost = async () => {
       if (!postId) return
-
       setLoading(true)
       try {
         const post = await postsApi.getPost(Number(postId))
@@ -53,75 +88,81 @@ export default function Write() {
         setSlug(post.slug)
         setVisibility(post.visibility)
         setContentType(post.content_type)
-        setTags(post.content.tags.join(', '))
+        setTags(post.content.tags ? post.content.tags.join(', ') : '')
         setDescription(post.content.description || '')
         setCoverImageUrl(post.content.cover_image_url || '')
-        setContent(post.content.body)
+        setContent(post.content.body || '')
 
-        // Load chapters if it's a book
+        // Load chapters if book
         if (post.content_type === 'book') {
           try {
             const chaptersData = await chaptersApi.getChapters(post.id)
             const chaptersWithContent: Chapter[] = []
-            
             for (const chapter of chaptersData) {
               const chapterWithContent = await chaptersApi.getChapter(chapter.id)
               chaptersWithContent.push({
                 id: chapter.id,
                 title: chapter.title,
                 order: chapter.order,
-                content: chapterWithContent.content.body
+                content: chapterWithContent.content?.body || '',
               })
             }
-            
             setChapters(chaptersWithContent)
             if (chaptersWithContent.length > 0) {
               setActiveChapterIndex(0)
             }
-          } catch (error) {
-            console.error('Failed to load chapters:', error)
+          } catch (e) {
+            console.error('Failed to load book chapters:', e)
           }
         }
-      } catch (error) {
-        console.error('Failed to load post:', error)
-        alert('Failed to load post. Redirecting to new post.')
+      } catch (err) {
+        console.error('Failed to load post:', err)
+        showToast('Failed to load manuscript. Starting new document.', 'error')
         navigate('/write')
       } finally {
         setLoading(false)
       }
     }
-
     loadPost()
   }, [postId, navigate])
 
-  // Auto-generate slug from title (only if not editing or slug is empty)
+  // Word count & reading time calculation
+  const stats = useMemo(() => {
+    const text = contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex]
+      ? chapters[activeChapterIndex].content
+      : content
+    const words = text ? text.replace(/<[^>]*>?/gm, '').trim().split(/\s+/).filter(Boolean).length : 0
+    const chars = text ? text.replace(/<[^>]*>?/gm, '').length : 0
+    const readingTime = Math.max(1, Math.ceil(words / 200))
+    return { words, chars, readingTime }
+  }, [content, chapters, activeChapterIndex, contentType])
+
+  // Auto-generate slug from title
   useEffect(() => {
     if (!isEditing || !slug) {
       const generatedSlug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
-      setSlug(generatedSlug)
+      setSlug(generatedSlug || 'untitled')
     }
   }, [title, isEditing, slug])
 
-  // Auto-save draft every 10 seconds
+  // Reliable debounced autosave
   useEffect(() => {
-    if (!title || (contentType !== 'book' && !content) || (contentType === 'book' && chapters.length === 0)) {
+    if (!title.trim()) {
       setAutoSaveStatus('idle')
       return
     }
 
-    const autoSaveTimer = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         setAutoSaveStatus('saving')
-        
         if (isEditing && currentPostId) {
-          // Update existing draft
           const updateData: PostUpdate = {
             title,
             slug: slug || 'untitled',
-            visibility: 'draft', // Auto-save as draft
+            visibility: 'draft',
             content_type: contentType,
             content: {
               body: contentType === 'book' ? '' : content,
@@ -131,8 +172,20 @@ export default function Write() {
             },
           }
           await postsApi.updatePost(currentPostId, updateData)
+
+          // Auto-save active chapter if book
+          if (contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex]) {
+            const ch = chapters[activeChapterIndex]
+            if (ch.id) {
+              await chaptersApi.updateChapter(ch.id, {
+                title: ch.title,
+                order: ch.order,
+                content: { body: ch.content },
+              })
+            }
+          }
         } else {
-          // Create new draft
+          // Create draft
           const postData: PostCreate = {
             title,
             slug: slug || 'untitled',
@@ -148,454 +201,490 @@ export default function Write() {
           const post = await postsApi.createPost(postData)
           setCurrentPostId(post.id)
           setIsEditing(true)
-          // Update URL to include post ID
           navigate(`/write/${post.id}`, { replace: true })
         }
-        
+
         setAutoSaveStatus('saved')
         setLastSaved(new Date())
-        
-        // Reset to idle after 2 seconds
-        setTimeout(() => {
-          setAutoSaveStatus('idle')
-        }, 2000)
-      } catch (error) {
-        console.error('Auto-save error:', error)
+        setTimeout(() => setAutoSaveStatus('idle'), 3000)
+      } catch (err) {
+        console.error('Auto-save error:', err)
         setAutoSaveStatus('error')
-        setTimeout(() => {
-          setAutoSaveStatus('idle')
-        }, 3000)
+        setTimeout(() => setAutoSaveStatus('idle'), 4000)
       }
-    }, 10000)
+    }, 12000)
 
-    return () => clearTimeout(autoSaveTimer)
-  }, [title, slug, content, tags, contentType, chapters, coverImageUrl, description, isEditing, currentPostId, navigate])
+    return () => clearTimeout(timer)
+  }, [title, content, tags, chapters, activeChapterIndex, contentType, isEditing, currentPostId, coverImageUrl, description])
 
   const addChapter = () => {
     const newChapter: Chapter = {
       title: `Chapter ${chapters.length + 1}`,
       order: chapters.length + 1,
-      content: ''
+      content: '',
     }
     setChapters([...chapters, newChapter])
     setActiveChapterIndex(chapters.length)
-    // Clear the active chapter content when adding a new chapter
-    // The new chapter will have empty content by default
   }
 
-  const removeChapter = (index: number) => {
+  const removeChapter = async (index: number) => {
+    const chapter = chapters[index]
+    if (chapter.id) {
+      try {
+        await chaptersApi.deleteChapter(chapter.id)
+      } catch (e) {
+        console.error('Failed to delete chapter:', e)
+      }
+    }
     const updated = chapters.filter((_, i) => i !== index).map((ch, i) => ({
       ...ch,
-      order: i + 1
+      order: i + 1,
     }))
     setChapters(updated)
     if (activeChapterIndex === index) {
-      setActiveChapterIndex(null)
+      setActiveChapterIndex(updated.length > 0 ? 0 : null)
     } else if (activeChapterIndex !== null && activeChapterIndex > index) {
       setActiveChapterIndex(activeChapterIndex - 1)
     }
   }
 
-  const updateChapter = (index: number, field: 'title' | 'content', value: string) => {
+  const updateChapterTitle = (index: number, newTitle: string) => {
     const updated = [...chapters]
-    updated[index] = { ...updated[index], [field]: value }
+    updated[index] = { ...updated[index], title: newTitle }
     setChapters(updated)
   }
 
-  // Ensure collaboration entry exists for active chapter
-  useEffect(() => {
-    const ensureCollabForChapter = async () => {
-      if (activeChapterIndex === null) return
-      const chapter = chapters[activeChapterIndex]
-      if (!chapter || !chapter.id || !currentPostId) return
-      if (chapterCollabMap[chapter.id]) return
-
-      try {
-        const data = await (await import('../api/collaboration')).collaborationApi.createOrGetCollab(currentPostId, chapter.id)
-        setChapterCollabMap(prev => ({ ...prev, [chapter.id!]: data.collab_id }))
-      } catch (e) {
-        console.error('Failed to ensure collab for chapter', e)
-      }
+  const handleEditorContentChange = (newHtml: string) => {
+    if (contentType === 'book' && activeChapterIndex !== null) {
+      const updated = [...chapters]
+      updated[activeChapterIndex] = { ...updated[activeChapterIndex], content: newHtml }
+      setChapters(updated)
+    } else {
+      setContent(newHtml)
     }
+  }
 
-    ensureCollabForChapter()
-  }, [activeChapterIndex, chapters, currentPostId, chapterCollabMap])
-
-  const handleSave = async () => {
-    if (!title) {
-      alert('Please fill in title')
+  // Publication handler called from 5-step PublishModal
+  const handlePublishSubmit = async (metadata: {
+    visibility: 'public' | 'draft'
+    coverImageUrl?: string
+    description?: string
+    genre?: string
+    tags: string
+    language: string
+  }) => {
+    if (!title.trim()) {
+      showToast('Please provide a manuscript title', 'error')
       return
     }
 
-    if (contentType === 'book' && chapters.length === 0) {
-      alert('Please add at least one chapter for a book')
-      return
-    }
-
-    if (contentType !== 'book' && !content) {
-      alert('Please fill in content')
-      return
-    }
-
-    setPublishing(true)
     try {
+      const tagsArray = metadata.tags.split(',').map((t) => t.trim()).filter(Boolean)
+      if (metadata.genre && !tagsArray.includes(metadata.genre.toLowerCase())) {
+        tagsArray.push(metadata.genre.toLowerCase())
+      }
+
+      let publishedPost
+
       if (isEditing && currentPostId) {
-        // Update existing post
         const updateData: PostUpdate = {
           title,
           slug: slug || 'untitled',
-          visibility,
-          content: {
-            body: contentType === 'book' ? '' : content,
-            tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-            cover_image_url: coverImageUrl || undefined,
-            description: description || undefined,
-          },
-        }
-        const post = await postsApi.updatePost(currentPostId, updateData)
-
-        // Update chapters if it's a book
-        if (contentType === 'book') {
-          // Get existing chapters
-          const existingChapters = await chaptersApi.getChapters(post.id)
-          
-          // Delete chapters that are no longer in the list
-          for (const existingChapter of existingChapters) {
-            const stillExists = chapters.some(ch => ch.id === existingChapter.id)
-            if (!stillExists) {
-              await chaptersApi.deleteChapter(existingChapter.id)
-            }
-          }
-
-          // Update or create chapters
-          for (const chapter of chapters) {
-            if (chapter.id) {
-              // Update existing chapter
-              await chaptersApi.updateChapter(chapter.id, {
-                title: chapter.title,
-                order: chapter.order,
-                content: {
-                  body: chapter.content
-                }
-              })
-            } else {
-              // Create new chapter
-              await chaptersApi.createChapter(post.id, {
-                title: chapter.title,
-                order: chapter.order,
-                content: {
-                  body: chapter.content
-                }
-              })
-            }
-          }
-        }
-
-        if (visibility === 'public') {
-          navigate(`/post/${post.slug}`)
-        } else {
-          alert('Draft saved successfully!')
-        }
-      } else {
-        // Create new post
-        const postData: PostCreate = {
-          title,
-          slug: slug || 'untitled',
-          visibility,
+          visibility: metadata.visibility,
           content_type: contentType,
           content: {
             body: contentType === 'book' ? '' : content,
-            tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-            cover_image_url: coverImageUrl || undefined,
-            description: description || undefined,
+            tags: tagsArray,
+            cover_image_url: metadata.coverImageUrl,
+            description: metadata.description,
           },
         }
-        const post = await postsApi.createPost(postData)
-        setCurrentPostId(post.id)
-        setIsEditing(true)
+        publishedPost = await postsApi.updatePost(currentPostId, updateData)
 
-        // If it's a book, create chapters
-        if (contentType === 'book' && chapters.length > 0) {
-          for (const chapter of chapters) {
-            await chaptersApi.createChapter(post.id, {
-              title: chapter.title,
-              order: chapter.order,
-              content: {
-                body: chapter.content
-              }
+        // Sync all chapters for book
+        if (contentType === 'book') {
+          for (const ch of chapters) {
+            if (ch.id) {
+              await chaptersApi.updateChapter(ch.id, {
+                title: ch.title,
+                order: ch.order,
+                content: { body: ch.content },
+              })
+            } else {
+              await chaptersApi.createChapter(publishedPost.id, {
+                title: ch.title,
+                order: ch.order,
+                content: { body: ch.content },
+              })
+            }
+          }
+        }
+      } else {
+        const postData: PostCreate = {
+          title,
+          slug: slug || 'untitled',
+          visibility: metadata.visibility,
+          content_type: contentType,
+          content: {
+            body: contentType === 'book' ? '' : content,
+            tags: tagsArray,
+            cover_image_url: metadata.coverImageUrl,
+            description: metadata.description,
+          },
+        }
+        publishedPost = await postsApi.createPost(postData)
+        if (contentType === 'book') {
+          for (const ch of chapters) {
+            await chaptersApi.createChapter(publishedPost.id, {
+              title: ch.title,
+              order: ch.order,
+              content: { body: ch.content },
             })
           }
         }
-
-        if (visibility === 'public') {
-          success('Post published successfully!')
-          navigate(`/post/${post.slug}`)
-        } else {
-          success('Draft saved successfully!')
-          // Update URL to include post ID for future edits
-          navigate(`/write/${post.id}`, { replace: true })
-        }
       }
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || `Failed to ${visibility === 'public' ? 'publish' : 'save draft'}`
-      showError(errorMessage)
-    } finally {
-      setPublishing(false)
+
+      showToast(
+        metadata.visibility === 'public'
+          ? 'Manuscript published to Ink&Echoes!'
+          : 'Draft saved to your library',
+        'success'
+      )
+
+      if (metadata.visibility === 'public') {
+        navigate(`/post/${publishedPost.slug}`)
+      }
+    } catch (err: any) {
+      console.error('Publish error:', err)
+      showToast('Failed to publish. Please check required fields.', 'error')
+      throw err
     }
   }
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        <div className="text-center py-16">
-          <p className="text-amber-800">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground font-serif">
+        <Feather className="w-6 h-6 animate-pulse text-literary mr-3" />
+        <span className="text-lg">Opening manuscript in studio...</span>
       </div>
     )
   }
 
-  const buttonText = visibility === 'public' ? 'Publish' : 'Save as Draft'
+  const activeContent =
+    contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex]
+      ? chapters[activeChapterIndex].content
+      : content
 
   return (
-    <div className="max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 md:mb-8 gap-3 sm:gap-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900">
-          {isEditing ? 'Edit Post' : 'Write a New Post'}
-        </h1>
-        {/* Auto-save Indicator */}
-        {autoSaveStatus !== 'idle' && (
-          <div className="flex items-center gap-2 text-sm text-amber-800/70">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      
+      {/* =========================================================================
+          TOP STUDIO TOOLBAR
+         ========================================================================= */}
+      <header className="h-16 border-b border-border/80 bg-card/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4 sticky top-0 z-40">
+        
+        {/* Left: Library Back link & Title input */}
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 max-w-xl">
+          <Link
+            to="/my-posts"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors flex-shrink-0"
+            title="Return to Library"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title your manuscript..."
+            className="text-base sm:text-lg font-serif font-bold bg-transparent text-foreground placeholder-muted-foreground/60 border-none focus:outline-none focus:ring-0 w-full truncate"
+          />
+        </div>
+
+        {/* Right: Autosave status, Panels toggle, Preview & Publish */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          
+          {/* Autosave Status Badge */}
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground pr-2 font-mono">
             {autoSaveStatus === 'saving' && (
-              <>
-                <Save className="w-4 h-4 animate-pulse" />
+              <span className="flex items-center gap-1 text-literary animate-pulse">
+                <Cloud className="h-3.5 w-3.5" />
                 <span>Saving...</span>
-              </>
+              </span>
             )}
             {autoSaveStatus === 'saved' && (
-              <>
-                <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="flex items-center gap-1 text-emerald-600">
+                <CheckCircle className="h-3.5 w-3.5" />
                 <span>Saved</span>
-                {lastSaved && (
-                  <span className="text-xs">
-                    {lastSaved.toLocaleTimeString()}
-                  </span>
-                )}
-              </>
+              </span>
+            )}
+            {autoSaveStatus === 'idle' && lastSaved && (
+              <span>Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             )}
             {autoSaveStatus === 'error' && (
-              <>
-                <X className="w-4 h-4 text-red-600" />
-                <span className="text-red-600">Save failed</span>
-              </>
+              <span className="text-destructive">Save failed</span>
             )}
           </div>
-        )}
-      </div>
-      <div className="space-y-6">
-        {/* Basic Info */}
-        <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-serif font-semibold text-amber-900 mb-4">Basic Information</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-amber-800">Title</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full p-2 border border-amber-200 rounded-md bg-white"
-                placeholder="Enter post title..."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1 text-amber-800">Slug</label>
-              <input
-                type="text"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                className="w-full p-2 border border-amber-200 rounded-md bg-white"
-                placeholder="url-friendly-slug"
-              />
-            </div>
-            {contentType === 'book' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-amber-800">Description</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 border border-amber-200 rounded-md bg-white min-h-[100px]"
-                    placeholder="Book description..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-amber-800">Cover Image URL</label>
-                  <input
-                    type="url"
-                    value={coverImageUrl}
-                    onChange={(e) => setCoverImageUrl(e.target.value)}
-                    className="w-full p-2 border border-amber-200 rounded-md bg-white"
-                    placeholder="https://example.com/cover.jpg"
-                  />
-                </div>
-              </>
-            )}
-            <div>
-              <label className="block text-sm font-medium mb-1 text-amber-800">Tags (comma-separated)</label>
-              <input
-                type="text"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                className="w-full p-2 border border-amber-200 rounded-md bg-white"
-                placeholder="fiction, poetry, sci-fi"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-amber-800">Content Type</label>
-                <select
-                  value={contentType}
-                  onChange={(e) => {
-                    setContentType(e.target.value)
-                    if (e.target.value !== 'book') {
-                      setChapters([])
-                      setActiveChapterIndex(null)
-                    }
-                  }}
-                  className="w-full p-2.5 sm:p-2 text-base sm:text-sm border border-amber-200 rounded-md bg-white"
-                >
-                  <option value="article">Article</option>
-                  <option value="poetry">Poetry</option>
-                  <option value="book">Book (Long Form)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-amber-800">Visibility</label>
-                <select
-                  value={visibility}
-                  onChange={(e) => setVisibility(e.target.value)}
-                  className="w-full p-2.5 sm:p-2 text-base sm:text-sm border border-amber-200 rounded-md bg-white"
-                >
-                  <option value="public">Public</option>
-                  <option value="draft">Draft</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Content Editor */}
-        {contentType === 'book' ? (
-          <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-serif font-semibold text-amber-900">Chapters</h2>
-              <div className="flex items-center gap-3">
-                <CollaboratorsBar
-                  collabId={activeChapterIndex !== null && chapters[activeChapterIndex]?.id ? chapterCollabMap[chapters[activeChapterIndex].id!] : undefined}
-                  bookId={currentPostId || undefined}
-                  chapterId={activeChapterIndex !== null ? chapters[activeChapterIndex].id : undefined}
-                  ownerId={authorId ?? undefined}
-                />
-                <button
-                  onClick={addChapter}
-                  className="flex items-center gap-2 px-4 py-2 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Chapter
-                </button>
-              </div>
-            </div>
-
-            {chapters.length === 0 ? (
-              <div className="text-center py-12 text-amber-700">
-                <p className="mb-4">No chapters yet. Click "Add Chapter" to get started.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Chapter List */}
-                <div className="space-y-2 mb-6">
-                  {chapters.map((chapter, index) => (
-                    <div
-                      key={index}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        activeChapterIndex === index
-                          ? 'border-amber-600 bg-amber-50'
-                          : 'border-amber-200 bg-white hover:bg-amber-50/50'
-                      }`}
-                      onClick={() => setActiveChapterIndex(index)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <GripVertical className="w-5 h-5 text-amber-600" />
-                          <span className="font-semibold text-amber-900">
-                            Chapter {chapter.order}: {chapter.title || 'Untitled'}
-                          </span>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeChapter(index)
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Active Chapter Editor */}
-                {activeChapterIndex !== null && (
-                  <div className="border border-amber-200 rounded-lg p-6 bg-white">
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-1 text-amber-800">Chapter Title</label>
-                      <input
-                        type="text"
-                        value={chapters[activeChapterIndex].title}
-                        onChange={(e) => updateChapter(activeChapterIndex, 'title', e.target.value)}
-                        className="w-full p-2 border border-amber-200 rounded-md"
-                        placeholder="Chapter title..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-amber-800">Chapter Content</label>
-                      <TiptapEditor
-                        key={`chapter-${activeChapterIndex}-${chapters[activeChapterIndex].order}`}
-                        content={chapters[activeChapterIndex].content}
-                        onChange={(content) => updateChapter(activeChapterIndex, 'content', content)}
-                        placeholder="Write your chapter content..."
-                        bookId={currentPostId || undefined}
-                        chapterId={chapters[activeChapterIndex].id || undefined}
-                        collabId={chapters[activeChapterIndex].id ? chapterCollabMap[chapters[activeChapterIndex].id!] : undefined}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-            <h2 className="text-xl font-serif font-semibold text-amber-900 mb-4">Content</h2>
-            <TiptapEditor content={content} onChange={setContent} />
-          </div>
-        )}
-
-        {/* Save/Publish Button */}
-        <div className="flex justify-end space-x-4">
+          {/* Toggle Panels Buttons */}
           <button
-            onClick={handleSave}
-            disabled={publishing || !title || (contentType !== 'book' && !content) || (contentType === 'book' && chapters.length === 0)}
-            className="w-full sm:w-auto px-6 py-3 bg-amber-800 text-amber-50 rounded-md hover:bg-amber-900 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors text-base sm:text-sm"
+            onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+            className={`p-2 rounded-lg border transition-colors ${
+              leftSidebarOpen ? 'border-literary text-literary bg-literary/10' : 'border-border text-muted-foreground hover:bg-muted'
+            }`}
+            title="Toggle Manuscript Sidebar"
           >
-            {publishing 
-              ? (visibility === 'public' ? 'Publishing...' : 'Saving...') 
-              : buttonText
-            }
+            {leftSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+          </button>
+
+          {/* Focus Mode Button */}
+          <button
+            onClick={() => setFocusMode(!focusMode)}
+            className={`p-2 rounded-lg border transition-colors ${
+              focusMode ? 'border-terracotta text-terracotta bg-terracotta/10' : 'border-border text-muted-foreground hover:bg-muted'
+            }`}
+            title="Focus Mode (Distraction-free)"
+          >
+            {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+
+          {/* Instant Preview Button */}
+          {slug && (
+            <Link
+              to={`/post/${slug}`}
+              target="_blank"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 border border-border text-foreground hover:bg-muted rounded-full text-xs font-medium transition-colors"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Preview</span>
+            </Link>
+          )}
+
+          {/* Publish Trigger Action */}
+          <button
+            onClick={() => setShowPublishModal(true)}
+            className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 bg-literary text-white rounded-full text-xs sm:text-sm font-semibold hover:bg-literary-hover transition-colors shadow-sm"
+          >
+            <Feather className="h-3.5 w-3.5" />
+            <span>Publish...</span>
           </button>
         </div>
+      </header>
+
+      {/* =========================================================================
+          STUDIO WORKSPACE: 3-PANEL LAYOUT
+         ========================================================================= */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT SIDEBAR: MANUSCRIPT & CHAPTERS */}
+        {leftSidebarOpen && !focusMode && (
+          <aside className="w-64 sm:w-72 border-r border-border bg-card/60 flex flex-col justify-between flex-shrink-0 animate-in slide-in-from-left duration-200">
+            <div className="p-4 space-y-4 overflow-y-auto">
+              
+              {/* Content Form Selector */}
+              <div>
+                <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  Manuscript Form
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setContentType('poem')}
+                    className={`p-2 rounded-lg border text-left flex items-center gap-1.5 transition-colors ${
+                      contentType === 'poem'
+                        ? 'border-terracotta bg-terracotta/15 text-foreground font-semibold'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-terracotta" />
+                    <span>Poem</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContentType('book')
+                      if (chapters.length === 0) addChapter()
+                    }}
+                    className={`p-2 rounded-lg border text-left flex items-center gap-1.5 transition-colors ${
+                      contentType === 'book'
+                        ? 'border-literary bg-literary/15 text-foreground font-semibold'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <BookOpen className="h-3.5 w-3.5 text-literary" />
+                    <span>Book</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setContentType('journal')}
+                    className={`p-2 rounded-lg border text-left flex items-center gap-1.5 transition-colors ${
+                      contentType === 'journal'
+                        ? 'border-emerald-600 bg-emerald-600/15 text-foreground font-semibold'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <FileText className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Journal</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setContentType('story')}
+                    className={`p-2 rounded-lg border text-left flex items-center gap-1.5 transition-colors ${
+                      contentType === 'story'
+                        ? 'border-indigo-600 bg-indigo-600/15 text-foreground font-semibold'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Feather className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>Story</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* BOOK CHAPTERS NAVIGATION */}
+              {contentType === 'book' && (
+                <div className="pt-2 border-t border-border/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Chapters ({chapters.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={addChapter}
+                      className="inline-flex items-center gap-1 text-xs text-literary hover:text-literary-hover font-medium"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                    {chapters.map((ch, idx) => (
+                      <div
+                        key={idx}
+                        className={`group flex items-center justify-between p-2 rounded-lg text-xs transition-colors ${
+                          activeChapterIndex === idx
+                            ? 'bg-literary/15 text-foreground font-semibold border-l-2 border-literary'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setActiveChapterIndex(idx)}
+                          className="flex-1 text-left truncate mr-2"
+                        >
+                          {ch.title || `Chapter ${idx + 1}`}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeChapter(idx)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+                          title="Delete chapter"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Collaborators Entry */}
+              {currentPostId && (
+                <div className="pt-3 border-t border-border/60">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                    Collaboration
+                  </span>
+                  <CollaboratorsBar
+                    bookId={currentPostId || undefined}
+                    ownerId={authorId || undefined}
+                    chapterId={
+                      contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex]
+                        ? chapters[activeChapterIndex].id
+                        : undefined
+                    }
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Metrics */}
+            <div className="p-4 border-t border-border/60 text-xs text-muted-foreground space-y-1 bg-card">
+              <div className="flex justify-between">
+                <span>Words:</span>
+                <span className="font-mono text-foreground font-medium">{stats.words}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Characters:</span>
+                <span className="font-mono text-foreground font-medium">{stats.chars}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Reading Time:</span>
+                <span className="font-mono text-foreground font-medium">~{stats.readingTime} min</span>
+              </div>
+            </div>
+          </aside>
+        )}
+
+        {/* CENTER WRITING CANVAS */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-14 py-8">
+          <div className="max-w-3xl mx-auto space-y-6">
+            
+            {/* If Book, editable Chapter Title */}
+            {contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex] && (
+              <div className="border-b border-border/60 pb-3">
+                <input
+                  type="text"
+                  value={chapters[activeChapterIndex].title}
+                  onChange={(e) => updateChapterTitle(activeChapterIndex, e.target.value)}
+                  placeholder="Chapter Title..."
+                  className="text-2xl sm:text-3xl font-serif font-bold text-foreground bg-transparent w-full focus:outline-none placeholder-muted-foreground/60"
+                />
+              </div>
+            )}
+
+            {/* Rich Text Editor */}
+            <div className="min-h-[500px]">
+              <TiptapEditor
+                content={activeContent}
+                onChange={handleEditorContentChange}
+                placeholder={
+                  contentType === 'poem'
+                    ? 'Begin your verses here... Stanza breaks and indentation will be preserved.'
+                    : 'Once upon a time in a quiet province...'
+                }
+                bookId={currentPostId || undefined}
+                chapterId={
+                  contentType === 'book' && activeChapterIndex !== null && chapters[activeChapterIndex]?.id
+                    ? chapters[activeChapterIndex].id
+                    : undefined
+                }
+              />
+            </div>
+          </div>
+        </main>
       </div>
+
+      {/* 5-Step Publishing Modal */}
+      <PublishModal
+        isOpen={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        onPublish={handlePublishSubmit}
+        initialData={{
+          title,
+          contentType,
+          coverImageUrl,
+          description,
+          tags,
+          visibility,
+          wordCount: stats.words,
+          chapterCount: contentType === 'book' ? chapters.length : undefined,
+        }}
+      />
     </div>
   )
 }
-

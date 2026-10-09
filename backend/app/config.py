@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     @property
     def POSTGRES_URL(self) -> str:
         """Get PostgreSQL URL from environment or use default"""
-        return os.getenv('POSTGRES_URL') or "postgresql://postgres:ayush@localhost:5432/postgres"
+        url = os.getenv('POSTGRES_URL') or "postgresql://postgres:ayush@localhost:5432/postgres"
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return url
     
     @property
     def MONGO_URI(self) -> str:

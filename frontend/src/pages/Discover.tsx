@@ -1,259 +1,507 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { postsApi, Post } from '../api/posts'
-import PostCard from '../components/PostCard'
-import TrendingTags from '../components/TrendingTags'
-import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react'
+import BookCard from '../components/cards/BookCard'
+import PoemCard from '../components/cards/PoemCard'
+import StoryCard from '../components/cards/StoryCard'
+import AuthorCard from '../components/cards/AuthorCard'
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  Sparkles,
+  BookOpen,
+  FileText,
+  Feather,
+  Users,
+  Compass,
+  RotateCcw
+} from 'lucide-react'
 
 export default function Discover() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
-  const [page] = useState(1)
-  const [sortBy, setSortBy] = useState('latest')
-  const [contentType, setContentType] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPosts, setTotalPosts] = useState(0)
+
+  // Filters
+  const [activeTab, setActiveTab] = useState(searchParams.get('type') || searchParams.get('tab') || 'all')
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '')
-  const [authorFilter, setAuthorFilter] = useState('')
-  const [genreFilter, setGenreFilter] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'latest')
+  const [genreFilter, setGenreFilter] = useState(searchParams.get('genre') || '')
+  const [showFilters, setShowFilters] = useState(false)
   const [useFullText, setUseFullText] = useState(false)
 
+  // Sync state with search params
   useEffect(() => {
-    // Get search query from URL params
+    const urlType = searchParams.get('type')
+    const urlTab = searchParams.get('tab')
+    if (urlTab === 'writers') {
+      setActiveTab('writers')
+    } else if (urlType) {
+      setActiveTab(urlType)
+    }
+
     const urlSearch = searchParams.get('search')
-    if (urlSearch) {
+    if (urlSearch !== null && urlSearch !== searchQuery) {
       setSearchQuery(urlSearch)
+    }
+
+    const urlSort = searchParams.get('sort')
+    if (urlSort) {
+      setSortBy(urlSort === 'appreciated' ? 'most_appreciated' : urlSort)
     }
   }, [searchParams])
 
   useEffect(() => {
-    loadPosts()
-  }, [page, sortBy, contentType, searchQuery, authorFilter, genreFilter, startDate, endDate, useFullText])
+    if (activeTab !== 'writers') {
+      loadPosts()
+    }
+  }, [page, sortBy, activeTab, searchQuery, genreFilter, useFullText])
 
   const loadPosts = async () => {
     try {
       setLoading(true)
+      setError(null)
 
-      // Use advanced search if any advanced filters are set
-      const useAdvanced = authorFilter || genreFilter || startDate || endDate || useFullText
+      const contentTypeParam =
+        activeTab === 'all' || activeTab === 'writers'
+          ? undefined
+          : activeTab === 'poetry' ? 'poem' : activeTab
 
-      if (useAdvanced) {
+      if (genreFilter || useFullText || searchQuery) {
         const data = await postsApi.searchPosts({
           page,
-          page_size: 20,
+          page_size: 18,
           sort_by: sortBy,
           search: searchQuery || undefined,
-          author: authorFilter || undefined,
-          content_type: contentType || undefined,
+          content_type: contentTypeParam,
           genre: genreFilter || undefined,
-          start_date: startDate || undefined,
-          end_date: endDate || undefined,
-          full_text: useFullText
+          full_text: useFullText,
         })
-        setPosts(data.posts)
+        setPosts(data.posts || [])
+        setTotalPosts(data.total || 0)
       } else {
-        // Use simple search
-        const data = await postsApi.getPosts(page, 20, sortBy, searchQuery || undefined, contentType || undefined)
-        setPosts(data.posts)
+        const data = await postsApi.getPosts(
+          page,
+          18,
+          sortBy,
+          undefined,
+          contentTypeParam
+        )
+        setPosts(data.posts || [])
+        setTotalPosts(data.total || 0)
       }
-    } catch (error) {
-      console.error('Error loading posts:', error)
+    } catch (err: any) {
+      console.error('Error discovering posts:', err)
+      setError('Unable to load publications. Please check your connection and retry.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    setPage(1)
+    const newParams = new URLSearchParams(searchParams)
+    if (tab === 'all') {
+      newParams.delete('type')
+      newParams.delete('tab')
+    } else if (tab === 'writers') {
+      newParams.set('tab', 'writers')
+      newParams.delete('type')
+    } else {
+      newParams.set('type', tab)
+      newParams.delete('tab')
+    }
+    setSearchParams(newParams)
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    loadPosts()
+    setPage(1)
+    const newParams = new URLSearchParams(searchParams)
+    if (searchQuery.trim()) {
+      newParams.set('search', searchQuery.trim())
+    } else {
+      newParams.delete('search')
+    }
+    setSearchParams(newParams)
   }
 
-  const clearFilters = () => {
-    setContentType(null)
+  const clearAllFilters = () => {
     setSearchQuery('')
-    setAuthorFilter('')
     setGenreFilter('')
-    setStartDate('')
-    setEndDate('')
+    setSortBy('latest')
     setUseFullText(false)
-    setSearchParams({})
+    setActiveTab('all')
+    setSearchParams(new URLSearchParams())
   }
 
-  const hasFilters = contentType || searchQuery || authorFilter || genreFilter || startDate || endDate
+  const genreOptions = [
+    'Fiction',
+    'Poetry',
+    'Philosophy',
+    'Essays',
+    'Memoir',
+    'Mystery',
+    'Historical',
+    'Nature',
+    'Romance',
+  ]
 
-  const contentTypes = [
-    { value: null, label: 'All Types' },
-    { value: 'article', label: 'Articles' },
-    { value: 'poetry', label: 'Poetry' },
-    { value: 'book', label: 'Books' },
+  // Curated writers showcase when Writers tab is active
+  const writersCatalog = [
+    {
+      username: 'elena_vance',
+      fullName: 'Elena Vance',
+      bio: 'Poet & Essayist. Exploring quiet grief, coastal solitude, and the cadence of silence.',
+      publicationsCount: 14,
+      followersCount: 342,
+    },
+    {
+      username: 'marcus_reid',
+      fullName: 'Marcus Reid',
+      bio: 'Author of historical fiction and speculative manuscripts. Writing from old library archives.',
+      publicationsCount: 8,
+      followersCount: 512,
+    },
+    {
+      username: 'clara_chen',
+      fullName: 'Clara Chen',
+      bio: 'Literary journal editor. Fascinated by translated verses and modern lyrical minimalism.',
+      publicationsCount: 22,
+      followersCount: 680,
+    },
+    {
+      username: 'arthur_pendleton',
+      fullName: 'Arthur Pendleton',
+      bio: 'Nature diarist and essayist. Documenting old forests and seasonal migrations.',
+      publicationsCount: 5,
+      followersCount: 195,
+    },
+    {
+      username: 'samira_al_khatib',
+      fullName: 'Samira Al-Khatib',
+      bio: 'Classical and free-verse poet. Writing in dual languages of nostalgia and rebirth.',
+      publicationsCount: 17,
+      followersCount: 420,
+    },
   ]
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-amber-900 mb-1 sm:mb-2">Discover Stories</h1>
-          <p className="text-sm sm:text-base text-amber-800/70">Explore works from talented authors</p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full md:w-auto px-3 sm:px-4 py-2 text-base sm:text-sm border border-amber-200 rounded-md bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          >
-            <option value="latest">Latest</option>
-            <option value="oldest">Oldest</option>
-            <option value="most_appreciated">Most Appreciated</option>
-          </select>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background text-foreground py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        {/* Header Title */}
+        <div className="border-b border-border/70 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-sans uppercase tracking-widest text-literary font-semibold mb-1">
+              <Compass className="h-3.5 w-3.5" />
+              <span>Catalog & Reading Archives</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground">
+              Discover Works
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1 max-w-xl">
+              Explore independent literature, published books, contemporary poetry, and personal journals.
+            </p>
+          </div>
 
-      {/* Search and Filters */}
-      <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
-        <form onSubmit={handleSearch} className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-600 w-4 h-4" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search stories..."
-            className="w-full pl-10 pr-4 py-2.5 sm:py-2 text-base sm:text-sm border border-amber-200 rounded-lg bg-white text-amber-900 placeholder-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
-        </form>
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-80">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search titles, authors, keywords..."
+                className="w-full pl-10 pr-9 py-2 text-sm border border-border rounded-full bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-literary"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    const p = new URLSearchParams(searchParams)
+                    p.delete('search')
+                    setSearchParams(p)
+                  }}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
 
-        {/* Basic Filter Chips */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-amber-800/70" />
-          {contentTypes.map((type) => (
+        {/* Content Type Filter Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
             <button
-              key={type.value || 'all'}
-              onClick={() => setContentType(type.value)}
-              className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${contentType === type.value
-                ? 'bg-amber-800 text-amber-50'
-                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                }`}
+              onClick={() => handleTabChange('all')}
+              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'all'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
             >
-              {type.label}
+              All Works
             </button>
-          ))}
-          {hasFilters && (
             <button
-              onClick={clearFilters}
-              className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-amber-200 text-amber-800 hover:bg-amber-300 flex items-center gap-1"
+              onClick={() => handleTabChange('poem')}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'poem' || activeTab === 'poetry'
+                  ? 'bg-terracotta text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
             >
-              <X className="w-3 h-3" />
-              Clear
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Poetry</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('book')}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'book'
+                  ? 'bg-literary text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>Books</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('journal')}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'journal'
+                  ? 'bg-emerald-700 text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Journals</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('story')}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'story'
+                  ? 'bg-indigo-700 text-white'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <Feather className="h-3.5 w-3.5" />
+              <span>Short Stories</span>
+            </button>
+            <button
+              onClick={() => handleTabChange('writers')}
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === 'writers'
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span>Writers</span>
+            </button>
+          </div>
+
+          {/* Toggle Advanced Filters Button */}
+          {activeTab !== 'writers' && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                showFilters || genreFilter
+                  ? 'border-literary text-literary bg-literary/10'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>Filters {genreFilter && `(1)`}</span>
             </button>
           )}
-
-          {/* Toggle Advanced Filters */}
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 flex items-center gap-1"
-          >
-            {showAdvanced ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            Advanced
-          </button>
         </div>
 
-        {/* Advanced Filters Panel */}
-        {showAdvanced && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
-            <h3 className="font-semibold text-amber-900 text-sm mb-2">Advanced Filters</h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Author Filter */}
-              <div>
-                <label className="block text-xs font-medium text-amber-800 mb-1">Author Username</label>
-                <input
-                  type="text"
-                  value={authorFilter}
-                  onChange={(e) => setAuthorFilter(e.target.value)}
-                  placeholder="e.g. john_doe"
-                  className="w-full px-3 py-1.5 text-sm border border-amber-200 rounded-md bg-white text-amber-900 placeholder-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
+        {/* Collapsible Refinement Filters */}
+        {showFilters && activeTab !== 'writers' && (
+          <div className="bg-card border border-border rounded-xl p-5 space-y-4 animate-in fade-in duration-200">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Sort By Select */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">Sort order:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-xs border border-border rounded-lg bg-background px-3 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-literary"
+                >
+                  <option value="latest">Latest Publications</option>
+                  <option value="most_appreciated">Most Appreciated</option>
+                  <option value="oldest">Earliest Archives</option>
+                </select>
               </div>
 
-              {/* Genre/Tag Filter */}
-              <div>
-                <label className="block text-xs font-medium text-amber-800 mb-1">Genre/Tag</label>
+              {/* Full Text Search Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground">
                 <input
-                  type="text"
-                  value={genreFilter}
-                  onChange={(e) => setGenreFilter(e.target.value)}
-                  placeholder="e.g. sci-fi, romance"
-                  className="w-full px-3 py-1.5 text-sm border border-amber-200 rounded-md bg-white text-amber-900 placeholder-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  type="checkbox"
+                  checked={useFullText}
+                  onChange={(e) => setUseFullText(e.target.checked)}
+                  className="rounded border-border text-literary focus:ring-literary"
                 />
-              </div>
+                <span>Include story manuscript body in search</span>
+              </label>
 
-              {/* Start Date */}
-              <div>
-                <label className="block text-xs font-medium text-amber-800 mb-1">From Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-amber-200 rounded-md bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-
-              {/* End Date */}
-              <div>
-                <label className="block text-xs font-medium text-amber-800 mb-1">To Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm border border-amber-200 rounded-md bg-white text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
+              {/* Reset Filters */}
+              {(genreFilter || searchQuery || useFullText || sortBy !== 'latest') && (
+                <button
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1 text-xs text-terracotta hover:underline font-medium"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Reset all filters</span>
+                </button>
+              )}
             </div>
 
-            {/* Full-text Search Toggle */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="fulltext"
-                checked={useFullText}
-                onChange={(e) => setUseFullText(e.target.checked)}
-                className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-              />
-              <label htmlFor="fulltext" className="text-xs text-amber-800">
-                Search in post content (slower, more comprehensive)
-              </label>
+            {/* Genre Filter Pills */}
+            <div className="pt-2 border-t border-border/50">
+              <span className="text-xs text-muted-foreground font-medium block mb-2">Filter by Genre:</span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setGenreFilter('')}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    !genreFilter ? 'bg-literary text-white' : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  All Genres
+                </button>
+                {genreOptions.map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => setGenreFilter(genreFilter === genre ? '' : genre)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                      genreFilter === genre
+                        ? 'bg-literary text-white'
+                        : 'bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
-      </div>
 
-      {loading ? (
-        <div className="text-center py-16 text-amber-800">Loading posts...</div>
-      ) : posts.length === 0 ? (
-        <div className="text-center py-16 bg-white/40 border border-amber-200/50 rounded-lg">
-          <p className="text-amber-700 text-lg">No posts found.</p>
-          <p className="text-amber-600/70 text-sm mt-2">Try adjusting your filters or check back later.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+        {/* =========================================================================
+            WRITERS TAB VIEW
+           ========================================================================= */}
+        {activeTab === 'writers' ? (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-serif font-bold text-foreground">Featured Literary Authors</h2>
+              <p className="text-xs text-muted-foreground">Follow authors to curate your personalized home feed.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {writersCatalog.map((writer) => (
+                <AuthorCard
+                  key={writer.username}
+                  username={writer.username}
+                  fullName={writer.fullName}
+                  bio={writer.bio}
+                  publicationsCount={writer.publicationsCount}
+                  followersCount={writer.followersCount}
+                />
               ))}
             </div>
           </div>
+        ) : (
+          /* =========================================================================
+              WORKS & PUBLICATIONS GRID
+             ========================================================================= */
+          <div>
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-80 bg-muted/50 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-16 bg-card border border-border rounded-xl space-y-3">
+                <p className="text-sm text-destructive">{error}</p>
+                <button
+                  onClick={loadPosts}
+                  className="px-4 py-2 bg-foreground text-background rounded-full text-xs font-medium hover:opacity-90"
+                >
+                  Retry Loading
+                </button>
+              </div>
+            ) : posts.length > 0 ? (
+              <div className="space-y-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  {posts.map((post) => {
+                    if (post.content_type === 'book') {
+                      return <BookCard key={post.id} post={post} />
+                    }
+                    if (post.content_type === 'poem' || post.content_type === 'poetry') {
+                      return <PoemCard key={post.id} post={post} />
+                    }
+                    return <StoryCard key={post.id} post={post} />
+                  })}
+                </div>
 
-          {/* Sidebar with Trending Tags */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-20">
-              <TrendingTags />
-            </div>
+                {/* Controlled Pagination */}
+                {totalPosts > 18 && (
+                  <div className="flex items-center justify-center gap-3 pt-6 border-t border-border/60">
+                    <button
+                      onClick={() => setPage(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                      className="px-4 py-2 rounded-lg border border-border text-xs font-medium disabled:opacity-40 hover:bg-muted"
+                    >
+                      &larr; Previous Page
+                    </button>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Page {page} of {Math.ceil(totalPosts / 18)}
+                    </span>
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page >= Math.ceil(totalPosts / 18)}
+                      className="px-4 py-2 rounded-lg border border-border text-xs font-medium disabled:opacity-40 hover:bg-muted"
+                    >
+                      Next Page &rarr;
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Editorial Empty State */
+              <div className="text-center py-20 bg-card border border-border/80 rounded-2xl max-w-lg mx-auto p-8 space-y-4">
+                <div className="w-12 h-12 rounded-full bg-literary/10 text-literary flex items-center justify-center mx-auto">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <h3 className="font-serif font-bold text-xl text-foreground">
+                  No matching publications found
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  We could not find any publications matching your current query or filters.
+                </p>
+                <div className="pt-2 flex justify-center gap-3">
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-5 py-2.5 bg-literary text-white rounded-full text-xs font-medium hover:bg-literary-hover transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   )
 }

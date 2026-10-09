@@ -1,7 +1,7 @@
 import http from 'http'
 import url from 'url'
 import fetch from 'node-fetch'
-import { setupWSConnection } from 'y-websocket/bin/utils.js'
+import { setupWSConnection } from 'y-websocket/bin/utils'
 
 const BACKEND_VERIFY_URL = process.env.BACKEND_VERIFY_URL || 'http://backend:8000/api/v1/auth/me'
 const PORT = process.env.PORT || 1234
