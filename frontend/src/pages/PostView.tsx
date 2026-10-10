@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { postsApi, PostWithContent } from '../api/posts'
 import { useUserStore } from '../store/userStore'
@@ -8,9 +8,10 @@ import BookViewer from '../components/BookViewer'
 import DictionaryPopup from '../components/DictionaryPopup'
 import SEO from '../components/SEO'
 import ShareButtons from '../components/ShareButtons'
+import FollowButton from '../components/FollowButton'
 import { useDictionary } from '../hooks/useDictionary'
 import { useAnalytics } from '../hooks/useAnalytics'
-import { Heart, Hand, FileText, BookOpen } from 'lucide-react'
+import { Heart, Hand, FileText, BookOpen, Clock, ArrowLeft } from 'lucide-react'
 
 export default function PostView() {
   const { slug } = useParams<{ slug: string }>()
@@ -64,7 +65,8 @@ export default function PostView() {
         })
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Post not found')
+      console.error('Error loading post:', err)
+      setError('Publication not found or has been withdrawn.')
     } finally {
       setLoading(false)
     }
@@ -75,14 +77,8 @@ export default function PostView() {
     try {
       const data = await postsApi.getPostEngagement(post.id)
       setEngagement(data)
-    } catch (error) {
-      // If not authenticated, use post counts
-      setEngagement({
-        is_liked: false,
-        has_clapped: false,
-        likes_count: post.likes_count,
-        claps_count: post.claps_count,
-      })
+    } catch (err) {
+      console.error('Error loading engagement:', err)
     }
   }
 
@@ -98,8 +94,8 @@ export default function PostView() {
         likes_count: updated.likes_count,
         claps_count: updated.claps_count,
       })
-    } catch (error) {
-      console.error('Error liking post:', error)
+    } catch (err) {
+      console.error('Error liking post:', err)
     } finally {
       setUpdating(false)
     }
@@ -117,8 +113,8 @@ export default function PostView() {
         likes_count: updated.likes_count,
         claps_count: updated.claps_count,
       })
-    } catch (error) {
-      console.error('Error clapping post:', error)
+    } catch (err) {
+      console.error('Error clapping post:', err)
     } finally {
       setUpdating(false)
     }
@@ -129,18 +125,36 @@ export default function PostView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-literary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-serif italic text-muted-foreground">Opening manuscript...</span>
+        </div>
       </div>
     )
   }
 
   if (error || !post) {
-    return <div className="text-center py-16">{error || 'Post not found'}</div>
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
+        <h2 className="font-serif font-bold text-2xl text-foreground mb-2">Manuscript Unavailable</h2>
+        <p className="text-sm text-muted-foreground mb-6">{error || 'This work could not be located.'}</p>
+        <Link
+          to="/discover"
+          className="px-5 py-2.5 bg-foreground text-background rounded-full text-xs font-medium"
+        >
+          Return to Discover
+        </Link>
+      </div>
+    )
   }
 
-  // Render based on content type
-  if (post.content_type === 'poetry') {
+  const isPoetry = post.content_type === 'poem' || post.content_type === 'poetry'
+  const isBook = post.content_type === 'book'
+  const readingTimeMinutes = Math.max(1, Math.ceil((post.content?.body?.length || 200) / 900))
+
+  // Render Poetry View
+  if (isPoetry) {
     return (
       <>
         <SEO
@@ -156,80 +170,45 @@ export default function PostView() {
         <PoetryScroll
           title={post.title}
           content={post.content.body}
+          author={post.author_username}
           date={post.created_at}
         />
-        <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-          {/* Share & Download Buttons */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-2xl mx-auto py-8 px-4 border-t border-border/60">
+          <div className="flex items-center justify-between gap-4 mb-8">
             <ShareButtons
               url={`/post/${post.slug}`}
               title={post.title}
               description={post.content.description}
             />
 
-            <div className="flex items-center gap-2">
-              <a
-                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download PDF"
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLike}
+                disabled={!isAuthenticated || updating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                  engagement?.is_liked
+                    ? 'border-terracotta bg-terracotta/10 text-terracotta'
+                    : 'border-border text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <FileText className="w-4 h-4" />
-                PDF
-              </a>
-              <a
-                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download EPUB"
+                <Heart className={`w-3.5 h-3.5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+                <span>{engagement?.likes_count || 0}</span>
+              </button>
+
+              <button
+                onClick={handleClap}
+                disabled={!isAuthenticated || updating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
+                  engagement?.has_clapped
+                    ? 'border-literary bg-literary/10 text-literary'
+                    : 'border-border text-muted-foreground hover:text-foreground'
+                }`}
               >
-                <BookOpen className="w-4 h-4" />
-                EPUB
-              </a>
+                <Hand className="w-3.5 h-3.5" />
+                <span>{engagement?.claps_count || 0}</span>
+              </button>
             </div>
           </div>
-
-          {/* Engagement buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
-            <button
-              onClick={handleLike}
-              disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
-              <span>{engagement?.likes_count || 0}</span>
-            </button>
-            <button
-              onClick={handleClap}
-              disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>{engagement?.claps_count || 0}</span>
-            </button>
-          </div>
-
-          {/* Tags */}
-          {post.content.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4 sm:mb-6 md:mb-8">
-              {post.content.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
 
           <CommentSection postId={post.id} />
         </div>
@@ -237,7 +216,8 @@ export default function PostView() {
     )
   }
 
-  if (post.content_type === 'book') {
+  // Render Book View
+  if (isBook) {
     return (
       <>
         <SEO
@@ -253,91 +233,47 @@ export default function PostView() {
         <BookViewer
           title={post.title}
           content={post.content.body}
+          author={post.author_username}
           date={post.created_at}
           postId={post.id}
           coverImageUrl={post.content.cover_image_url}
           description={post.content.description}
         />
-        <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-          {/* Share & Download Buttons */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto py-8 px-4 border-t border-border/60">
+          <div className="flex items-center justify-between gap-4 mb-8">
             <ShareButtons
               url={`/post/${post.slug}`}
               title={post.title}
               description={post.content.description}
             />
-
             <div className="flex items-center gap-2">
               <a
-                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
+                href={`/api/v1/export/pdf/${post.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download PDF"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
               >
-                <FileText className="w-4 h-4" />
-                PDF
+                <FileText className="w-3.5 h-3.5 text-literary" />
+                <span>PDF</span>
               </a>
               <a
-                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
+                href={`/api/v1/export/epub/${post.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download EPUB"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
               >
-                <BookOpen className="w-4 h-4" />
-                EPUB
+                <BookOpen className="w-3.5 h-3.5 text-literary" />
+                <span>EPUB</span>
               </a>
             </div>
           </div>
-
-          {/* Engagement buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 justify-center flex-wrap">
-            <button
-              onClick={handleLike}
-              disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
-              <span>{engagement?.likes_count || 0}</span>
-            </button>
-            <button
-              onClick={handleClap}
-              disabled={!isAuthenticated || updating}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>{engagement?.claps_count || 0}</span>
-            </button>
-          </div>
-
-          {/* Tags */}
-          {post.content.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center mb-4 sm:mb-6 md:mb-8">
-              {post.content.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
           <CommentSection postId={post.id} />
         </div>
       </>
     )
   }
 
-  // Default article view
+  // Default Editorial Article / Story Reading View
   return (
     <>
       <SEO
@@ -350,110 +286,209 @@ export default function PostView() {
         publishedTime={post.created_at}
         tags={post.content.tags}
       />
-      <div className="max-w-4xl mx-auto py-4 sm:py-6 md:py-8 px-3 sm:px-4">
-        <article>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-3 sm:mb-4 md:mb-6 leading-tight text-amber-900">
-            {post.title}
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 md:mb-8">
-            {new Date(post.created_at).toLocaleDateString()}
-          </p>
 
-          {/* Share & Download Buttons */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-            <ShareButtons
-              url={`/post/${post.slug}`}
-              title={post.title}
-              description={post.content.description}
-            />
-
-            <div className="flex items-center gap-2">
-              <a
-                href={`http://localhost:8000/api/v1/export/pdf/${post.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download PDF"
-              >
-                <FileText className="w-4 h-4" />
-                PDF
-              </a>
-              <a
-                href={`http://localhost:8000/api/v1/export/epub/${post.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-md transition-colors border border-amber-200"
-                title="Download EPUB"
-              >
-                <BookOpen className="w-4 h-4" />
-                EPUB
-              </a>
-            </div>
+      <div className="min-h-screen bg-background text-foreground py-8 sm:py-14 px-4 transition-colors">
+        <article className="max-w-3xl mx-auto">
+          {/* Back Navigation */}
+          <div className="mb-6">
+            <Link
+              to="/discover"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-literary transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Discover</span>
+            </Link>
           </div>
 
-          {/* Engagement buttons */}
-          {isAuthenticated && (
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8 flex-wrap">
-              <button
-                onClick={handleLike}
-                disabled={updating}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.is_liked
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-              >
-                <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${engagement?.is_liked ? 'fill-current' : ''}`} />
-                <span>{engagement?.likes_count || 0}</span>
-              </button>
-              <button
-                onClick={handleClap}
-                disabled={updating}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all text-sm sm:text-base ${engagement?.has_clapped
-                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-              >
-                <Hand className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span>{engagement?.claps_count || 0}</span>
-              </button>
+          {/* Article Header */}
+          <header className="space-y-4 pb-8 mb-8 border-b border-border/70">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-widest font-sans font-semibold">
+              <span className="text-literary">{post.content_type || 'Story'}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{readingTimeMinutes} min read</span>
+              </span>
             </div>
-          )}
 
-          <div
-            className="prose prose-lg max-w-none text-amber-900/90"
-            style={{
-              fontFamily: "'Playfair Display', 'Georgia', serif",
-            }}
-            dangerouslySetInnerHTML={{ __html: post.content.body }}
-          />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold tracking-tight text-foreground leading-[1.15]">
+              {post.title}
+            </h1>
 
-          {/* Dictionary Popup */}
-          {showDictionaryPopup && selectedWord && (
-            <div data-dictionary-popup>
-              <DictionaryPopup
-                word={selectedWord}
-                definition={dictionaryData}
-                position={dictionaryPosition}
-                onClose={closeDictionaryPopup}
-                isLoading={isDictionaryLoading}
+            {post.content.description && (
+              <p className="text-lg sm:text-xl font-reading italic text-muted-foreground leading-relaxed">
+                {post.content.description}
+              </p>
+            )}
+
+            {/* Author Attribution Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
+              <div className="flex items-center gap-3">
+                {post.author_username && (
+                  <Link
+                    to={`/user/${post.author_username}`}
+                    className="w-10 h-10 rounded-full bg-literary/15 text-literary flex items-center justify-center font-serif font-bold text-sm"
+                  >
+                    {post.author_username[0].toUpperCase()}
+                  </Link>
+                )}
+                <div>
+                  <Link
+                    to={`/user/${post.author_username}`}
+                    className="font-medium text-sm text-foreground hover:text-literary transition-colors"
+                  >
+                    {post.author_username}
+                  </Link>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(post.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              {post.author_username && (
+                <FollowButton
+                  username={post.author_username}
+                  initialIsFollowing={false}
+                />
+              )}
+            </div>
+          </header>
+
+          {/* Cover Artwork if provided */}
+          {post.content.cover_image_url && (
+            <div className="mb-10 rounded-xl overflow-hidden border border-border/60 aspect-[16/9]">
+              <img
+                src={post.content.cover_image_url}
+                alt={post.title}
+                className="w-full h-full object-cover"
               />
             </div>
           )}
-          {post.content.tags.length > 0 && (
-            <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap gap-1.5 sm:gap-2">
+
+          {/* Core Long-form Reading Column (65-75ch measure) */}
+          <div
+            className="prose prose-lg max-w-none font-reading text-foreground/90 leading-[1.8] text-[19px] sm:text-[20px] selection:bg-literary/20 dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: post.content.body }}
+          />
+
+          {/* Tags */}
+          {post.content.tags && post.content.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-12 pt-6 border-t border-border/60">
               {post.content.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2 sm:px-3 py-0.5 sm:py-1 bg-muted text-muted-foreground rounded-full text-xs sm:text-sm"
+                  className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-medium"
                 >
                   #{tag}
                 </span>
               ))}
             </div>
           )}
+
+          {/* Engagement & Share Footer */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-8 py-5 border-y border-border/70">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLike}
+                disabled={!isAuthenticated || updating}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs sm:text-sm font-medium transition-colors ${
+                  engagement?.is_liked
+                    ? 'border-terracotta bg-terracotta/10 text-terracotta'
+                    : 'border-border text-foreground hover:bg-muted'
+                }`}
+              >
+                <Heart className={`w-4 h-4 ${engagement?.is_liked ? 'fill-current' : ''}`} />
+                <span>{engagement?.likes_count || 0}</span>
+              </button>
+
+              <button
+                onClick={handleClap}
+                disabled={!isAuthenticated || updating}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs sm:text-sm font-medium transition-colors ${
+                  engagement?.has_clapped
+                    ? 'border-literary bg-literary/10 text-literary'
+                    : 'border-border text-foreground hover:bg-muted'
+                }`}
+              >
+                <Hand className="w-4 h-4" />
+                <span>{engagement?.claps_count || 0}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <ShareButtons
+                url={`/post/${post.slug}`}
+                title={post.title}
+                description={post.content.description}
+              />
+
+              <div className="flex items-center gap-1.5">
+                <a
+                  href={`/api/v1/export/pdf/${post.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
+                  title="Download PDF"
+                >
+                  <FileText className="w-3.5 h-3.5 text-literary" />
+                  <span>PDF</span>
+                </a>
+                <a
+                  href={`/api/v1/export/epub/${post.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
+                  title="Download EPUB"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-literary" />
+                  <span>EPUB</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Author Bio Banner */}
+          {post.author_username && (
+            <div className="my-10 p-6 bg-card border border-border/80 rounded-2xl flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-literary/15 text-literary flex items-center justify-center font-serif font-bold text-lg flex-shrink-0">
+                {post.author_username[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-serif font-bold text-base text-foreground">
+                    Written by {post.author_username}
+                  </h4>
+                  <FollowButton username={post.author_username} initialIsFollowing={false} />
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  Independent writer published on Ink&Echoes. Explore more works by this author in the library archives.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          <div className="mt-12">
+            <CommentSection postId={post.id} />
+          </div>
         </article>
 
-        <CommentSection postId={post.id} />
+        {/* Dictionary Word Lookup Popup */}
+        {showDictionaryPopup && selectedWord && (
+          <div data-dictionary-popup>
+            <DictionaryPopup
+              word={selectedWord}
+              definition={dictionaryData}
+              position={dictionaryPosition}
+              onClose={closeDictionaryPopup}
+              isLoading={isDictionaryLoading}
+            />
+          </div>
+        )}
       </div>
     </>
   )

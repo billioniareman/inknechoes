@@ -1,12 +1,14 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, BookOpen } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function ThemeToggle() {
     const { theme, setTheme, effectiveTheme } = useTheme();
 
     const toggleTheme = () => {
-        // Cycle through: light -> dark -> system
+        // Cycle through: light -> sepia -> dark -> system
         if (theme === 'light') {
+            setTheme('sepia');
+        } else if (theme === 'sepia') {
             setTheme('dark');
         } else if (theme === 'dark') {
             setTheme('system');
@@ -17,14 +19,18 @@ export default function ThemeToggle() {
 
     const getIcon = () => {
         if (theme === 'system') {
-            return <Monitor className="h-5 w-5" />;
+            return <Monitor className="h-4 w-4 sm:h-5 sm:w-5" />;
         }
-        return effectiveTheme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />;
+        if (effectiveTheme === 'sepia') {
+            return <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-literary" />;
+        }
+        return effectiveTheme === 'dark' ? <Moon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Sun className="h-4 w-4 sm:h-5 sm:w-5" />;
     };
 
     const getTooltip = () => {
         if (theme === 'system') return 'System theme';
-        return effectiveTheme === 'dark' ? 'Dark mode' : 'Light mode';
+        if (effectiveTheme === 'sepia') return 'Sepia reading mode';
+        return effectiveTheme === 'dark' ? 'Charcoal night mode' : 'Warm ivory light mode';
     };
 
     return (

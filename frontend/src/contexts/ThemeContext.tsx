@@ -1,11 +1,11 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'sepia' | 'dark' | 'system';
 
 interface ThemeContextType {
     theme: Theme;
     setTheme: (theme: Theme) => void;
-    effectiveTheme: 'light' | 'dark'; // The actual theme being displayed
+    effectiveTheme: 'light' | 'sepia' | 'dark'; // The actual theme being displayed
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -17,7 +17,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         return stored || 'system';
     });
 
-    const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
+    const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'sepia' | 'dark'>('light');
 
     useEffect(() => {
         // Update effectiveTheme based on current theme setting
@@ -47,7 +47,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         // Apply theme to document
         const root = document.documentElement;
-        root.classList.remove('light', 'dark');
+        root.classList.remove('light', 'sepia', 'dark');
         root.classList.add(effectiveTheme);
     }, [effectiveTheme]);
 

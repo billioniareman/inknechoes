@@ -25,57 +25,57 @@ export default function LanguageStyleInsights({ insights }: LanguageStyleInsight
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-serif font-bold text-amber-900 mb-6">Language & Style Insights</h2>
+      <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-6">Language & Style Insights</h2>
 
       {/* Sentence Complexity */}
-      <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-        <h3 className="text-xl font-serif font-semibold text-amber-900 mb-4">Sentence Complexity</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="text-center p-4 bg-amber-50 rounded-lg">
-            <p className="text-sm text-amber-700 mb-2">Average Sentence Length</p>
-            <p className="text-3xl font-bold text-amber-900">{insights.sentence_complexity.average_sentence_length}</p>
-            <p className="text-xs text-amber-600 mt-1">words per sentence</p>
+      <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm transition-colors">
+        <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Sentence Complexity</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="text-center p-5 bg-secondary/40 rounded-xl border border-border/60">
+            <p className="text-xs font-sans tracking-wide uppercase text-muted-foreground mb-2">Average Sentence Length</p>
+            <p className="text-3xl font-serif font-bold text-foreground">{insights.sentence_complexity.average_sentence_length}</p>
+            <p className="text-xs text-muted-foreground mt-1">words per sentence</p>
           </div>
-          <div className="text-center p-4 bg-amber-50 rounded-lg">
-            <p className="text-sm text-amber-700 mb-2">Readability Index</p>
-            <p className="text-3xl font-bold text-amber-900">{insights.sentence_complexity.readability_index}</p>
-            <p className="text-xs text-amber-600 mt-1">Flesch-Kincaid score</p>
+          <div className="text-center p-5 bg-secondary/40 rounded-xl border border-border/60">
+            <p className="text-xs font-sans tracking-wide uppercase text-muted-foreground mb-2">Readability Index</p>
+            <p className="text-3xl font-serif font-bold text-foreground">{insights.sentence_complexity.readability_index}</p>
+            <p className="text-xs text-muted-foreground mt-1">Flesch-Kincaid score</p>
           </div>
         </div>
       </div>
 
       {/* Unique Vocabulary Ratio */}
-      <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-        <h3 className="text-xl font-serif font-semibold text-amber-900 mb-4">Vocabulary Richness</h3>
-        <div className="text-center">
-          <p className="text-4xl font-bold text-amber-900">{insights.unique_vocabulary_ratio}%</p>
-          <p className="text-amber-700 mt-2">Unique vocabulary ratio</p>
-          <div className="mt-4 w-full bg-amber-200 rounded-full h-4">
+      <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm transition-colors">
+        <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Vocabulary Richness</h3>
+        <div className="text-center py-2">
+          <p className="text-4xl font-serif font-bold text-foreground">{insights.unique_vocabulary_ratio}%</p>
+          <p className="text-muted-foreground text-sm mt-1">Unique vocabulary ratio</p>
+          <div className="mt-4 w-full max-w-md mx-auto bg-secondary rounded-full h-3 overflow-hidden border border-border/50">
             <div
-              className="bg-amber-600 h-4 rounded-full transition-all"
+              className="bg-literary h-3 rounded-full transition-all"
               style={{ width: `${Math.min(insights.unique_vocabulary_ratio, 100)}%` }}
-            ></div>
+            />
           </div>
         </div>
       </div>
 
       {/* Emotion Analysis */}
       {emotionData.length > 0 && (
-        <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-serif font-semibold text-amber-900 mb-4">Emotion Analysis</h3>
+        <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm transition-colors">
+          <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Emotional Tone Analysis</h3>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={emotionData}>
-              <PolarGrid stroke="#d4a574" />
-              <PolarAngleAxis dataKey="emotion" stroke="#92400e" />
-              <PolarRadiusAxis angle={90} domain={[0, 'auto']} stroke="#92400e" />
+              <PolarGrid stroke="currentColor" className="text-border/40" />
+              <PolarAngleAxis dataKey="emotion" stroke="currentColor" className="text-muted-foreground text-xs" />
+              <PolarRadiusAxis angle={90} domain={[0, 'auto']} stroke="currentColor" className="text-muted-foreground text-xs" />
               <Radar
                 name="Emotions"
                 dataKey="value"
-                stroke="#d97706"
-                fill="#d97706"
-                fillOpacity={0.6}
+                stroke="#826449"
+                fill="#826449"
+                fillOpacity={0.4}
               />
-              <Tooltip contentStyle={{ backgroundColor: '#fef3c7', border: '1px solid #d97706' }} />
+              <Tooltip />
             </RadarChart>
           </ResponsiveContainer>
         </div>
@@ -83,15 +83,15 @@ export default function LanguageStyleInsights({ insights }: LanguageStyleInsight
 
       {/* Most Frequent Words */}
       {insights.most_frequent_words.length > 0 && (
-        <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-serif font-semibold text-amber-900 mb-4">Most Frequent Words</h3>
+        <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm transition-colors">
+          <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Most Frequent Words</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={insights.most_frequent_words.slice(0, 10)}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#d4a574" />
-              <XAxis dataKey="word" stroke="#92400e" />
-              <YAxis stroke="#92400e" />
-              <Tooltip contentStyle={{ backgroundColor: '#fef3c7', border: '1px solid #d97706' }} />
-              <Bar dataKey="count" fill="#d97706" />
+              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border/40" />
+              <XAxis dataKey="word" stroke="currentColor" className="text-muted-foreground text-xs" />
+              <YAxis stroke="currentColor" className="text-muted-foreground text-xs" />
+              <Tooltip />
+              <Bar dataKey="count" fill="#826449" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -99,15 +99,15 @@ export default function LanguageStyleInsights({ insights }: LanguageStyleInsight
 
       {/* Lexical Diversity Over Time */}
       {diversityData.length > 0 && (
-        <div className="bg-white/60 border border-amber-200/50 rounded-lg p-6 shadow-sm">
-          <h3 className="text-xl font-serif font-semibold text-amber-900 mb-4">Lexical Diversity Over Time</h3>
+        <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-sm transition-colors">
+          <h3 className="text-xl font-serif font-semibold text-foreground mb-4">Lexical Diversity Over Time</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={diversityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#d4a574" />
-              <XAxis dataKey="month" stroke="#92400e" />
-              <YAxis stroke="#92400e" />
-              <Tooltip contentStyle={{ backgroundColor: '#fef3c7', border: '1px solid #d97706' }} />
-              <Bar dataKey="diversity_score" fill="#d97706" name="Diversity Score" />
+              <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border/40" />
+              <XAxis dataKey="month" stroke="currentColor" className="text-muted-foreground text-xs" />
+              <YAxis stroke="currentColor" className="text-muted-foreground text-xs" />
+              <Tooltip />
+              <Bar dataKey="diversity_score" fill="#B85C45" name="Diversity Score" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import DictionaryPopup from './DictionaryPopup'
 import { useDictionary } from '../hooks/useDictionary'
+import { Sparkles, SlidersHorizontal, BookOpen, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
 
 interface PoetryScrollProps {
   title: string
@@ -9,6 +12,11 @@ interface PoetryScrollProps {
 }
 
 export default function PoetryScroll({ title, content, author, date }: PoetryScrollProps) {
+  const { setTheme, effectiveTheme } = useTheme()
+  const [fontSize, setFontSize] = useState<number>(20)
+  const [fontFamily, setFontFamily] = useState<'literata' | 'playfair' | 'inter'>('literata')
+  const [showControls, setShowControls] = useState<boolean>(false)
+
   // Dictionary functionality
   const {
     selectedWord,
@@ -18,129 +26,218 @@ export default function PoetryScroll({ title, content, author, date }: PoetryScr
     showPopup: showDictionaryPopup,
     closePopup: closeDictionaryPopup,
   } = useDictionary({ enabled: true })
-  // Extract text from HTML content
-  const extractTextFromHTML = (html: string): string[] => {
-    // Create a temporary div to parse HTML
+
+  // Extract stanzas from HTML while preserving blank lines and verse structure
+  const parseStanzas = (html: string): string[][] => {
     const tempDiv = document.createElement('div')
     tempDiv.innerHTML = html
-    
-    // Extract text from all paragraph elements
+
     const paragraphs = tempDiv.querySelectorAll('p')
-    const lines: string[] = []
-    
-    paragraphs.forEach((p) => {
-      const text = p.textContent?.trim() || ''
-      if (text) {
-        lines.push(text)
+    if (paragraphs.length > 0) {
+      const stanzas: string[][] = []
+      let currentStanza: string[] = []
+
+      paragraphs.forEach((p) => {
+        const text = p.textContent?.trim() || ''
+        if (text === '') {
+          if (currentStanza.length > 0) {
+            stanzas.push(currentStanza)
+            currentStanza = []
+          }
+        } else {
+          // If inner HTML contains <br>, split by br
+          const innerLines = p.innerHTML.split(/<br\s*[\/]?>/gi)
+          innerLines.forEach((l) => {
+            const clean = l.replace(/<[^>]*>?/gm, '').trim()
+            if (clean) currentStanza.push(clean)
+          })
+        }
+      })
+
+      if (currentStanza.length > 0) {
+        stanzas.push(currentStanza)
       }
-    })
-    
-    // If no paragraphs found, try to extract all text
-    if (lines.length === 0) {
-      const allText = tempDiv.textContent || ''
-      // Split by newlines and filter empty lines
-      const textLines = allText.split('\n').map(line => line.trim()).filter(line => line)
-      lines.push(...textLines)
+
+      if (stanzas.length > 0) return stanzas
     }
-    
-    return lines
+
+    // Fallback: split by double newlines or single newlines
+    const raw = tempDiv.textContent || ''
+    const blocks = raw.split(/\n\s*\n/)
+    return blocks.map((b) => b.split('\n').map((l) => l.trim()).filter(Boolean))
   }
-  
-  // Extract text lines from HTML content
-  const lines = extractTextFromHTML(content)
+
+  const stanzas = parseStanzas(content)
+
+  const fontClass =
+    fontFamily === 'literata'
+      ? 'font-reading'
+      : fontFamily === 'playfair'
+      ? 'font-serif'
+      : 'font-sans'
 
   return (
-    <div className="flex justify-center items-center min-h-screen py-12 px-4 bg-gradient-to-b from-amber-50/50 to-stone-50/50">
-      <div className="relative w-full max-w-2xl">
-        {/* Scroll Container */}
-        <div className="relative">
-          {/* Top Roller */}
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="w-32 h-8 bg-gradient-to-b from-amber-800 to-amber-900 rounded-full shadow-lg"></div>
-              {/* Decorative finials */}
-              <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-amber-900 rounded-full shadow-md"></div>
-              <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-amber-900 rounded-full shadow-md"></div>
-            </div>
+    <div className="min-h-screen bg-background text-foreground py-10 sm:py-16 px-4 transition-colors">
+      <div className="max-w-2xl mx-auto">
+        
+        {/* Subtle Floating Reader Controls Bar */}
+        <div className="flex items-center justify-between pb-6 mb-8 border-b border-border/70">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground uppercase tracking-widest font-sans font-semibold">
+            <Sparkles className="h-3.5 w-3.5 text-terracotta" />
+            <span>Poetry Edition</span>
           </div>
 
-          {/* Parchment Paper */}
-          <div className="relative bg-gradient-to-b from-amber-50 via-amber-40 to-amber-50 border-t-4 border-b-4 border-amber-800/30 shadow-2xl">
-            {/* Decorative top border */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-amber-800/20 to-transparent">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-full h-px bg-amber-800/30"></div>
+          <div className="flex items-center gap-2">
+            {/* Quick Theme Switcher */}
+            <div className="flex items-center bg-card border border-border rounded-full p-1 text-xs">
+              <button
+                onClick={() => setTheme('light')}
+                className={`p-1.5 rounded-full transition-colors ${
+                  effectiveTheme === 'light' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                }`}
+                title="Warm Ivory (Light)"
+                aria-label="Warm Ivory Light"
+              >
+                <Sun className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setTheme('sepia')}
+                className={`p-1.5 rounded-full transition-colors ${
+                  effectiveTheme === 'sepia' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                }`}
+                title="Parchment (Sepia)"
+                aria-label="Parchment Sepia"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setTheme('dark')}
+                className={`p-1.5 rounded-full transition-colors ${
+                  effectiveTheme === 'dark' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                }`}
+                title="Charcoal (Dark)"
+                aria-label="Charcoal Dark"
+              >
+                <Moon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Typography Popover Trigger */}
+            <button
+              onClick={() => setShowControls(!showControls)}
+              className="p-1.5 bg-card border border-border rounded-full text-muted-foreground hover:text-foreground transition-colors"
+              title="Reader Settings"
+              aria-label="Reader Settings"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Reader Preferences Bar */}
+        {showControls && (
+          <div className="bg-card border border-border rounded-xl p-4 mb-8 text-xs space-y-3 shadow-sm animate-in fade-in duration-150">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-foreground">Typeface:</span>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setFontFamily('literata')}
+                  className={`px-3 py-1 rounded-md border ${
+                    fontFamily === 'literata'
+                      ? 'bg-literary text-white border-literary'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Literata
+                </button>
+                <button
+                  onClick={() => setFontFamily('playfair')}
+                  className={`px-3 py-1 rounded-md border ${
+                    fontFamily === 'playfair'
+                      ? 'bg-literary text-white border-literary'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Playfair
+                </button>
+                <button
+                  onClick={() => setFontFamily('inter')}
+                  className={`px-3 py-1 rounded-md border ${
+                    fontFamily === 'inter'
+                      ? 'bg-literary text-white border-literary'
+                      : 'border-border text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Inter
+                </button>
               </div>
             </div>
 
-            {/* Content Area */}
-            <div className="px-12 py-16 mt-12 mb-12">
-              {/* Title */}
-              <h1 className="text-4xl md:text-5xl font-serif font-bold text-amber-900 mb-8 text-center leading-tight">
-                {title}
-              </h1>
-
-              {/* Poetry Lines */}
-              <div className="space-y-3 text-amber-900/90">
-                {lines.map((line, idx) => (
-                  <p
-                    key={idx}
-                    className="text-lg md:text-xl font-serif text-center leading-relaxed"
-                    style={{
-                      fontFamily: "'Playfair Display', 'Georgia', serif",
-                      letterSpacing: '0.02em',
-                    }}
-                  >
-                    {line}
-                  </p>
-                ))}
-              </div>
-
-              {/* Author and Date */}
-              {(author || date) && (
-                <div className="mt-12 pt-8 border-t border-amber-800/20 text-center">
-                  {author && (
-                    <p className="text-amber-800/70 font-serif text-lg italic mb-2">
-                      — {author}
-                    </p>
-                  )}
-                  {date && (
-                    <p className="text-amber-800/50 text-sm">
-                      {new Date(date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Decorative bottom border */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-amber-800/20 to-transparent">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-full h-px bg-amber-800/30"></div>
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-foreground">Verse Size:</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setFontSize(Math.max(16, fontSize - 2))}
+                  className="px-2.5 py-1 border border-border rounded-md hover:bg-muted"
+                >
+                  A-
+                </button>
+                <span className="text-muted-foreground">{fontSize}px</span>
+                <button
+                  onClick={() => setFontSize(Math.min(26, fontSize + 2))}
+                  className="px-2.5 py-1 border border-border rounded-md hover:bg-muted"
+                >
+                  A+
+                </button>
               </div>
             </div>
-
-            {/* Aged paper texture overlay */}
-            <div className="absolute inset-0 pointer-events-none opacity-10">
-              <div className="absolute top-10 left-8 w-32 h-32 bg-amber-700/20 rounded-full blur-2xl"></div>
-              <div className="absolute bottom-20 right-12 w-24 h-24 bg-amber-600/20 rounded-full blur-xl"></div>
-              <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-amber-800/20 rounded-full blur-lg"></div>
-            </div>
           </div>
+        )}
 
-          {/* Bottom Roller */}
-          <div className="flex justify-center mt-4">
-            <div className="relative">
-              <div className="w-32 h-8 bg-gradient-to-b from-amber-800 to-amber-900 rounded-full shadow-lg"></div>
-              {/* Decorative finials */}
-              <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-amber-900 rounded-full shadow-md"></div>
-              <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-amber-900 rounded-full shadow-md"></div>
+        {/* Poem Header & Attribution */}
+        <header className="text-center space-y-3 mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight tracking-tight">
+            {title}
+          </h1>
+
+          {author && (
+            <p className="font-serif italic text-base sm:text-lg text-literary">
+              by {author}
+            </p>
+          )}
+
+          {date && (
+            <p className="text-xs text-muted-foreground">
+              {new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+          )}
+
+          <div className="w-12 h-px bg-border/80 mx-auto mt-6" />
+        </header>
+
+        {/* Stanzas Canvas: Preserves pure line breaks & cadence */}
+        <div
+          className={`space-y-8 sm:space-y-10 ${fontClass} leading-loose tracking-wide text-foreground/90`}
+          style={{ fontSize: `${fontSize}px` }}
+        >
+          {stanzas.map((stanza, sIdx) => (
+            <div key={sIdx} className="space-y-1 pl-4 sm:pl-8 border-l border-literary/30">
+              {stanza.map((line, lIdx) => (
+                <p key={lIdx} className="leading-relaxed">
+                  {line}
+                </p>
+              ))}
             </div>
-          </div>
+          ))}
+        </div>
+
+        {/* Footer Finial Decoration */}
+        <div className="text-center mt-16 sm:mt-24 pt-8 border-t border-border/70 text-xs text-muted-foreground font-serif italic">
+          &lowast; &lowast; &lowast;
         </div>
       </div>
 
@@ -159,4 +256,3 @@ export default function PoetryScroll({ title, content, author, date }: PoetryScr
     </div>
   )
 }
-
