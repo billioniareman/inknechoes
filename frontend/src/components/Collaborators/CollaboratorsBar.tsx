@@ -70,13 +70,9 @@ export default function CollaboratorsBar({ collabId, bookId, chapterId, ownerId 
   }, [collabId, bookId, chapterId, currentCollabId, canInvite, ownerId])
 
   const invite = async () => {
-    if (!inviteUserId) {
-      alert('Enter a user id to invite')
-      return
-    }
-
-    if (isNaN(Number(inviteUserId))) {
-      alert('Enter a valid numeric user id')
+    const inputVal = inviteUserId.trim()
+    if (!inputVal) {
+      alert('Enter a username or user ID to invite')
       return
     }
 
@@ -90,7 +86,7 @@ export default function CollaboratorsBar({ collabId, bookId, chapterId, ownerId 
       let effectiveCollabId = currentCollabId
       if (!effectiveCollabId) {
         if (!bookId || !chapterId) {
-          alert('Unable to invite: missing book or chapter information')
+          alert('Unable to invite: missing book or chapter information. Please save first.')
           setLoading(false)
           return
         }
@@ -100,16 +96,21 @@ export default function CollaboratorsBar({ collabId, bookId, chapterId, ownerId 
         setCurrentCollabId(effectiveCollabId)
       }
 
-      console.debug('Inviting user', inviteUserId, 'to collab', effectiveCollabId)
-      await collaborationApi.inviteCollaborator(effectiveCollabId!, { user_id: Number(inviteUserId), role: inviteRole })
+      const isNumeric = !isNaN(Number(inputVal))
+      const payload = isNumeric
+        ? { user_id: Number(inputVal), role: inviteRole }
+        : { username: inputVal, role: inviteRole }
+
+      await collaborationApi.inviteCollaborator(effectiveCollabId!, payload)
       setShowInvite(false)
       // refresh list
       const res = await collaborationApi.listCollaborators(effectiveCollabId!)
       setCollaborators(res.collaborators)
       setInviteUserId('')
-    } catch (e) {
+    } catch (e: any) {
       console.error('Invite failed', e)
-      alert('Invite failed. See console for details.')
+      const msg = e.response?.data?.detail || 'Invite failed. Please verify the username or user ID.'
+      alert(msg)
     } finally {
       setLoading(false)
     }
@@ -119,38 +120,51 @@ export default function CollaboratorsBar({ collabId, bookId, chapterId, ownerId 
     <div className="flex items-center gap-3">
       <div className="flex -space-x-2">
         {collaborators.slice(0, 5).map((c) => (
-          <div key={c.user_id || c.display_name} title={`${c.display_name || c.user_id} (${c.role})`} className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border border-white" style={{ backgroundColor: pickColor(c) }}>
+          <div key={c.user_id || c.display_name} title={`${c.display_name || c.user_id} (${c.role})`} className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 border-background text-white shadow-sm" style={{ backgroundColor: pickColor(c) }}>
             {c.display_name ? c.display_name.charAt(0).toUpperCase() : String(c.user_id)}
           </div>
         ))}
       </div>
       <button
         onClick={() => {
-          // Only show invite dialog when allowed
           if (!currentCollabId && !(bookId && chapterId && canInvite)) return
           setShowInvite(true)
         }}
-        className="px-3 py-1 bg-amber-800 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-3 py-1.5 text-xs font-medium bg-literary text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         disabled={!(currentCollabId || (bookId && chapterId && canInvite))}
         title={!currentCollabId && bookId && chapterId && !canInvite ? 'Only book owner can invite collaborators' : (!currentCollabId && !(bookId && chapterId) ? 'Save the post/chapter to enable sharing' : '')}
       >
-        Share
+        Share & Invite
       </button>
 
       {showInvite && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-4 rounded shadow max-w-sm w-full">
-            <h3 className="font-semibold mb-2">Invite collaborator</h3>
-            <label className="block text-sm text-gray-700">User ID</label>
-            <input value={inviteUserId} onChange={e => setInviteUserId(e.target.value)} className="w-full p-2 border rounded mb-2" placeholder="User ID (numeric, e.g. 123)" />
-            <label className="block text-sm text-gray-700">Role</label>
-            <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} className="w-full p-2 border rounded mb-4">
-              <option value="editor">Editor</option>
-              <option value="viewer">Viewer</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowInvite(false)} className="px-3 py-1 border rounded">Cancel</button>
-              <button onClick={invite} className="px-3 py-1 bg-amber-800 text-white rounded" disabled={loading}>{loading ? 'Inviting...' : 'Invite'}</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-card text-card-foreground border border-border p-6 rounded-2xl shadow-2xl max-w-sm w-full space-y-4">
+            <h3 className="font-serif text-lg font-bold text-foreground">Invite Collaborator</h3>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Username or User ID</label>
+              <input 
+                value={inviteUserId} 
+                onChange={e => setInviteUserId(e.target.value)} 
+                className="w-full px-3 py-2 text-sm bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-literary/40" 
+                placeholder="e.g. jane_doe or 42" 
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">Permission Role</label>
+              <select 
+                value={inviteRole} 
+                onChange={e => setInviteRole(e.target.value)} 
+                className="w-full px-3 py-2 text-sm bg-muted/50 border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-literary/40"
+              >
+                <option value="editor">Editor (Can co-author & edit)</option>
+                <option value="viewer">Viewer (Read-only)</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowInvite(false)} className="px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground transition-colors">Cancel</button>
+              <button onClick={invite} className="px-4 py-1.5 text-xs font-medium bg-literary text-white rounded-lg hover:opacity-90 transition-opacity" disabled={loading}>{loading ? 'Inviting...' : 'Invite'}</button>
             </div>
           </div>
         </div>
@@ -158,3 +172,4 @@ export default function CollaboratorsBar({ collabId, bookId, chapterId, ownerId 
     </div>
   )
 }
+

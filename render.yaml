@@ -43,6 +43,21 @@ services:
       - key: S3_BUCKET
         value: inknechoes-media
 
+  - type: web
+    name: inknechoes-collab-ws
+    env: node
+    plan: free
+    region: oregon
+    rootDir: backend/collab_ws
+    buildCommand: npm install --production
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 1234
+      - key: BACKEND_VERIFY_URL
+        sync: false
+
+
 databases:
   - name: inknechoes-postgres
     plan: free

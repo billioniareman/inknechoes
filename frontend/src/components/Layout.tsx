@@ -531,7 +531,7 @@ export default function Layout() {
               </p>
               <div className="flex items-center gap-3 pt-2">
                 <a
-                  href="/api/v1/rss/global"
+                  href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/rss/global`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-literary border border-border px-3 py-1.5 rounded-full transition-colors"

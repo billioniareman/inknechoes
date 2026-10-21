@@ -47,9 +47,17 @@ Running locally
    VITE_API_BASE_URL=http://localhost:8000
    VITE_COLLAB_WS_URL=ws://localhost:1234
 
+Recent Improvements
+- Fixed WebSocket protocol handshake (`wss.handleUpgrade`) in `backend/collab_ws/server.js`.
+- Enabled inviting collaborators by username in addition to user_id.
+- Added in-app notifications on collaborator invitation.
+- Added `/collab/my-collaborations` endpoint and "Shared With Me" tab on `/my-posts`.
+- Permitted invited collaborators to view draft books and update chapters.
+- Added `collab_ws` service definition to `render.yaml` for production deployment.
+
 Notes & TODOs
 
 - Persisting snapshots only on client save is fine for now, but consider server-side persistence from the collaboration server or a periodic worker to capture canonical updates.
-- Improve invite flow to accept usernames/emails instead of raw user IDs.
 - Add unit tests for WebSocket auth and Playwright e2e tests for simultaneous editing.
 - Add UI to show live cursor positions, selection highlights, and typing indicators more clearly.
+

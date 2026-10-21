@@ -1,6 +1,7 @@
 import http from 'http'
 import url from 'url'
 import fetch from 'node-fetch'
+import { WebSocketServer } from 'ws'
 import { setupWSConnection } from 'y-websocket/bin/utils'
 
 const BACKEND_VERIFY_URL = process.env.BACKEND_VERIFY_URL || 'http://backend:8000/api/v1/auth/me'
@@ -10,6 +11,8 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' })
   res.end('Ink&Echoes collaboration WS')
 })
+
+const wss = new WebSocketServer({ noServer: true })
 
 server.on('upgrade', async (req, socket, head) => {
   try {
@@ -34,21 +37,42 @@ server.on('upgrade', async (req, socket, head) => {
     }
 
     // Verify token with backend
-    const resp = await fetch(BACKEND_VERIFY_URL, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
+    let resp
+    try {
+      resp = await fetch(BACKEND_VERIFY_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+    } catch (fetchErr) {
+      // In local dev without Docker network, fallback to localhost if backend:8000 fails
+      if (BACKEND_VERIFY_URL.includes('backend:8000')) {
+        try {
+          resp = await fetch('http://localhost:8000/api/v1/auth/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        } catch (localErr) {
+          console.error('Failed to verify token with local backend:', localErr)
+        }
+      } else {
+        console.error('Failed to reach backend verify URL:', fetchErr)
       }
-    })
+    }
 
-    if (resp.status !== 200) {
+    if (!resp || resp.status !== 200) {
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
       socket.destroy()
       return
     }
 
-    // If verified, delegate to y-websocket setup handler
-    setupWSConnection(req, socket, head, { gc: true })
+    // Upgrade to WebSocket protocol and pass connection to y-websocket handler
+    wss.handleUpgrade(req, socket, head, (ws) => {
+      setupWSConnection(ws, req, { gc: true })
+    })
   } catch (err) {
     console.error('WS upgrade error', err)
     try {
@@ -61,3 +85,4 @@ server.on('upgrade', async (req, socket, head) => {
 server.listen(PORT, () => {
   console.log(`Collaboration WS server listening on ${PORT}`)
 })
+

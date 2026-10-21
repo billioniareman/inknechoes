@@ -43,8 +43,10 @@ export const useUserStore = create<UserState>((set) => ({
     } catch (error) {
       console.error('Logout error:', error)
     } finally {
+      localStorage.removeItem('access_token')
       set({ user: null, isAuthenticated: false })
     }
   },
 }))
+
 

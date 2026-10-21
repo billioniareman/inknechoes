@@ -94,7 +94,9 @@ export default function TiptapEditor({
         // Fetch snapshot for this book/chapter
         try {
           const q = `?chapter_id=${chapterId}`
+          const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
           const resp = await fetch(`${baseUrl}/api/v1/collab/books/${bookId}${q}`, {
+            headers: { ...tokenHeader },
             credentials: 'include'
           })
           if (resp.ok) {
@@ -103,7 +105,6 @@ export default function TiptapEditor({
               const bytes = Uint8Array.from(atob(data.snapshot_b64), c => c.charCodeAt(0))
               Y.applyUpdate(ydoc, bytes)
             }
-            // If collab exists, but collabId prop is missing, client may request ws token later
           }
         } catch (e) {
           console.error('Failed to fetch snapshot', e)
@@ -112,14 +113,20 @@ export default function TiptapEditor({
         // Connect to WS provider
         const wsUrl = import.meta.env.VITE_COLLAB_WS_URL || 'ws://localhost:1234'
 
-        // If collabId not provided, request it by creating/getting the collab entry
+        // If collabId not provided, request it: first try existing collab (works for collaborators), fallback to create (owner)
         let effectiveCollabId = collabId
         if (!effectiveCollabId && bookId && chapterId) {
           try {
-            const data = await (await import('../../api/collaboration')).collaborationApi.createOrGetCollab(bookId, chapterId)
-            effectiveCollabId = data.collab_id
+            const collabApi = (await import('../../api/collaboration')).collaborationApi
+            try {
+              const existing = await collabApi.getCollabByBook(bookId, chapterId)
+              effectiveCollabId = existing?.collab_id
+            } catch {
+              const data = await collabApi.createOrGetCollab(bookId, chapterId)
+              effectiveCollabId = data?.collab_id
+            }
           } catch (e) {
-            console.error('Failed to create/get collab entry', e)
+            console.warn('Could not initialize or fetch collab entry', e)
           }
         }
 
@@ -178,12 +185,12 @@ export default function TiptapEditor({
           try {
             const update = Y.encodeStateAsUpdate(ydoc)
             const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
-            // prefer collabId from props if available
             const targetCollabId = effectiveCollabId
             if (!targetCollabId) return
+            const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
             await fetch(`${baseUrl}/api/v1/collab/${targetCollabId}/snapshot`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...tokenHeader },
               credentials: 'include',
               body: JSON.stringify({ snapshot_b64: b64 })
             })
@@ -202,9 +209,10 @@ export default function TiptapEditor({
               const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
               const targetCollabId = effectiveCollabId
               if (!targetCollabId) return
+              const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
               await fetch(`${baseUrl}/api/v1/collab/${targetCollabId}/snapshot`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...tokenHeader },
                 credentials: 'include',
                 body: JSON.stringify({ snapshot_b64: b64 })
               })

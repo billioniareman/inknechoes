@@ -30,10 +30,21 @@ async def create_new_chapter(
         )
     
     if post.author_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to add chapters to this post"
-        )
+        from app.models.collaborative_book import CollaborativeBook
+        is_editor = False
+        collabs = db.query(CollaborativeBook).filter(CollaborativeBook.book_id == post.id).all()
+        for c in collabs:
+            for collaborator in (c.collaborators or []):
+                if collaborator.get("user_id") == current_user.id and collaborator.get("role") in ("editor", "owner"):
+                    is_editor = True
+                    break
+            if is_editor:
+                break
+        if not is_editor:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to add chapters to this post"
+            )
     
     if post.content_type != "book":
         raise HTTPException(
@@ -106,10 +117,21 @@ async def update_chapter_by_id(
     # Verify user owns the post
     post = get_post(db, chapter.post_id)
     if post.author_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this chapter"
-        )
+        from app.models.collaborative_book import CollaborativeBook
+        is_editor = False
+        collabs = db.query(CollaborativeBook).filter(CollaborativeBook.book_id == post.id).all()
+        for c in collabs:
+            for collaborator in (c.collaborators or []):
+                if collaborator.get("user_id") == current_user.id and collaborator.get("role") in ("editor", "owner"):
+                    is_editor = True
+                    break
+            if is_editor:
+                break
+        if not is_editor:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this chapter"
+            )
     
     update_data = chapter_data.dict(exclude_unset=True)
     updated_chapter = await update_chapter(db, chapter, update_data)

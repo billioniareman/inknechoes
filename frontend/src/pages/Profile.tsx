@@ -85,7 +85,7 @@ export default function Profile() {
                 </h1>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`http://localhost:8000/api/v1/rss/user/${user.username}`}
+                    href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/rss/user/${user.username}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-colors"

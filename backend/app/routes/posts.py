@@ -8,7 +8,7 @@ from app.services.post_service import (
     create_post, get_post, get_post_by_slug, get_post_content,
     update_post, delete_post, get_public_posts, get_user_posts, search_posts_advanced
 )
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import get_current_user, get_optional_current_user
 from app.models.user import User
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -166,7 +166,7 @@ async def get_my_posts(
 @router.get("/{post_id}", response_model=PostWithContent)
 async def get_post_by_id(
     post_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """Get post by ID with content"""
@@ -177,13 +177,34 @@ async def get_post_by_id(
             detail="Post not found"
         )
     
-    # If post is a draft, only the author or admin can access it
+    # If post is a draft, only the author, admin, or invited collaborator can access it
     if post.visibility == "draft":
-        if post.author_id != current_user.id and not current_user.is_admin:
+        if not current_user:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this draft"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required to view this draft"
             )
+        if post.author_id != current_user.id and not current_user.is_admin:
+            # Check if user is an invited collaborator
+            from app.models.collaborative_book import CollaborativeBook
+            is_collab = False
+            collab_records = db.query(CollaborativeBook).filter(CollaborativeBook.book_id == post.id).all()
+            for c in collab_records:
+                if c.owner_id == current_user.id:
+                    is_collab = True
+                    break
+                for collaborator in (c.collaborators or []):
+                    if collaborator.get("user_id") == current_user.id:
+                        is_collab = True
+                        break
+                if is_collab:
+                    break
+
+            if not is_collab:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to access this draft"
+                )
     
     content = await get_post_content(post.mongo_id)
     if not content:
@@ -258,10 +279,22 @@ async def update_post_by_id(
         )
     
     if post.author_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this post"
-        )
+        # Check if user is an invited collaborator with editor role
+        from app.models.collaborative_book import CollaborativeBook
+        is_editor = False
+        collabs = db.query(CollaborativeBook).filter(CollaborativeBook.book_id == post.id).all()
+        for c in collabs:
+            for collaborator in (c.collaborators or []):
+                if collaborator.get("user_id") == current_user.id and collaborator.get("role") in ("editor", "owner"):
+                    is_editor = True
+                    break
+            if is_editor:
+                break
+        if not is_editor:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this post"
+            )
     
     update_data = post_data.dict(exclude_unset=True)
     updated_post = await update_post(db, post, update_data)
@@ -360,7 +393,7 @@ async def clap_post(
 @router.get("/{post_id}/engagement")
 async def get_post_engagement(
     post_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """Get user's engagement status for a post"""

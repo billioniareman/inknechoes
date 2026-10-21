@@ -1,18 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.database.postgres import get_db
 from app.models.post import Post
 from app.models.user import User
 from app.services import export_service
 from app.services.post_service import get_post_content
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import get_optional_current_user
 
 router = APIRouter(prefix="/export", tags=["export"])
 
 @router.get("/pdf/{post_id}")
 async def export_pdf(
     post_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -22,9 +23,10 @@ async def export_pdf(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
         
-    # Check visibility
-    if post.visibility != 'public' and post.author_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to export this post")
+    # Check visibility: public posts can be exported by anyone, non-public only by author/admin
+    if post.visibility != 'public':
+        if not current_user or (post.author_id != current_user.id and not current_user.is_admin):
+            raise HTTPException(status_code=403, detail="Not authorized to export this post")
         
     content = await get_post_content(post.mongo_id)
     if not content:
@@ -43,7 +45,7 @@ async def export_pdf(
 @router.get("/epub/{post_id}")
 async def export_epub(
     post_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -53,9 +55,10 @@ async def export_epub(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
         
-    # Check visibility
-    if post.visibility != 'public' and post.author_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to export this post")
+    # Check visibility: public posts can be exported by anyone, non-public only by author/admin
+    if post.visibility != 'public':
+        if not current_user or (post.author_id != current_user.id and not current_user.is_admin):
+            raise HTTPException(status_code=403, detail="Not authorized to export this post")
         
     content = await get_post_content(post.mongo_id)
     if not content:
@@ -70,3 +73,4 @@ async def export_epub(
         media_type="application/epub+zip",
         headers={"Content-Disposition": f"attachment; filename={post.slug}.epub"}
     )
+

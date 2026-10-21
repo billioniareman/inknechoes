@@ -16,7 +16,8 @@ class SnapshotIn(BaseModel):
 
 
 class InviteIn(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
+    username: Optional[str] = None
     role: Optional[str] = "editor"
     display_name: Optional[str] = None
     color: Optional[str] = None
@@ -30,8 +31,20 @@ def create_or_get_collab(book_id: int, chapter_id: Optional[int] = None, db: Ses
         from typing import Any, cast
         if not post or cast(Any, post).content_type != "book":
             raise HTTPException(status_code=404, detail="Book not found")
-        # Only owner (post.author_id) can init collaboration
+        # Only owner (post.author_id) can init collaboration, but existing collaborators can retrieve it
         if cast(Any, post).author_id != current_user.id:
+            existing_collab = collaboration_service.get_collaboration_by_book(db, book_id, chapter_id=chapter_id)
+            if existing_collab:
+                collab_obj = cast(Any, existing_collab)
+                is_collab = any(c.get("user_id") == current_user.id for c in (collab_obj.collaborators or []))
+                if is_collab:
+                    return {
+                        "collab_id": existing_collab.id,
+                        "book_id": existing_collab.book_id,
+                        "chapter_id": existing_collab.chapter_id,
+                        "title": existing_collab.title,
+                        "collaborators": existing_collab.collaborators
+                    }
             raise HTTPException(status_code=403, detail="Only book owner can initialize collaboration")
 
         collab = collaboration_service.create_collaboration_for_book(db, book_id, current_user.id, str(post.title), chapter_id=chapter_id)
@@ -116,14 +129,52 @@ def invite_collaborator(collab_id: int, payload: InviteIn, db: Session = Depends
         raise HTTPException(status_code=403, detail="Only owner can invite collaborators")
 
     try:
+        from app.models.user import User
+        target_user_id = payload.user_id
+        target_display_name = payload.display_name
+
+        if not target_user_id and payload.username:
+            u = db.query(User).filter(User.username == payload.username.strip()).first()
+            if not u:
+                raise HTTPException(status_code=404, detail=f"User '{payload.username}' not found")
+            target_user_id = u.id
+            if not target_display_name:
+                target_display_name = u.username
+        elif target_user_id and not target_display_name:
+            u = db.query(User).filter(User.id == target_user_id).first()
+            if u:
+                target_display_name = u.username
+
+        if not target_user_id:
+            raise HTTPException(status_code=400, detail="Either user_id or username is required")
+
         role = payload.role or 'editor'
-        entry = collaboration_service.add_collaborator(db, collab_id, payload.user_id, role, payload.display_name, payload.color)
+        entry = collaboration_service.add_collaborator(db, collab_id, target_user_id, role, target_display_name, payload.color)
+        
+        # Dispatch notification to invited user
+        try:
+            from app.services.notification_service import create_notification
+            book_title = collab.title or "a manuscript"
+            create_notification(
+                db=db,
+                recipient_id=target_user_id,
+                actor_id=current_user.id,
+                notification_type="mention",
+                message=f"{current_user.username} invited you to collaborate on '{book_title}'",
+                post_id=str(collab.book_id)
+            )
+        except Exception as notify_err:
+            from loguru import logger
+            logger.warning(f"Could not send notification for collab invite: {notify_err}")
+
         # audit
-        create_audit_log(db, current_user.id, "invite_collaborator", details=f"collab_id={collab_id}, invited={payload.user_id}")
+        create_audit_log(db, current_user.id, "invite_collaborator", details=f"collab_id={collab_id}, invited={target_user_id}")
         return {"collaborator": entry}
+    except HTTPException:
+        raise
     except Exception as exc:
         from loguru import logger
-        logger.exception(f"Failed to invite collaborator {payload.user_id} to collab {collab_id}: {exc}")
+        logger.exception(f"Failed to invite collaborator {payload.user_id or payload.username} to collab {collab_id}: {exc}")
         create_audit_log(db, current_user.id, "invite_collaborator", status="failed", details=str(exc))
         raise HTTPException(status_code=500, detail="Failed to invite collaborator")
 
@@ -169,4 +220,36 @@ def get_ws_token(collab_id: int, db: Session = Depends(get_db), current_user = D
     from app.utils.jwt_handler import create_access_token
     token = create_access_token({"sub": str(current_user.id)},)
     return {"token": token}
+
+
+@router.get("/my-collaborations")
+def get_my_collaborations(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """List all books where current user is an invited collaborator"""
+    from app.models.collaborative_book import CollaborativeBook
+    from app.models.user import User
+    collabs = db.query(CollaborativeBook).all()
+    user_collabs = []
+    seen_book_ids = set()
+    for c in collabs:
+        if c.owner_id == current_user.id:
+            continue
+        collab_entry = next((col for col in (c.collaborators or []) if col.get("user_id") == current_user.id), None)
+        if collab_entry and c.book_id not in seen_book_ids:
+            seen_book_ids.add(c.book_id)
+            post = db.query(Post).filter(Post.id == c.book_id).first()
+            if post:
+                owner = db.query(User).filter(User.id == post.author_id).first()
+                user_collabs.append({
+                    "id": post.id,
+                    "title": post.title,
+                    "slug": post.slug,
+                    "content_type": post.content_type,
+                    "visibility": post.visibility,
+                    "author_id": post.author_id,
+                    "author_username": owner.username if owner else "Unknown",
+                    "role": collab_entry.get("role", "editor"),
+                    "created_at": post.created_at.isoformat() if post.created_at else None,
+                    "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+                })
+    return {"collaborations": user_collabs}
 

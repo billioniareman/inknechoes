@@ -26,5 +26,10 @@ export const collaborationApi = {
   listCollaborators: async (collabId: number) => {
     const res = await axiosClient.get(`/api/v1/collab/${collabId}/collaborators`)
     return res.data
+  },
+  getMyCollaborations: async () => {
+    const res = await axiosClient.get(`/api/v1/collab/my-collaborations`)
+    return res.data
   }
 }
+

@@ -248,7 +248,7 @@ export default function PostView() {
             />
             <div className="flex items-center gap-2">
               <a
-                href={`/api/v1/export/pdf/${post.id}`}
+                href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/export/pdf/${post.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
@@ -257,7 +257,7 @@ export default function PostView() {
                 <span>PDF</span>
               </a>
               <a
-                href={`/api/v1/export/epub/${post.id}`}
+                href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/export/epub/${post.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
@@ -428,7 +428,7 @@ export default function PostView() {
 
               <div className="flex items-center gap-1.5">
                 <a
-                  href={`/api/v1/export/pdf/${post.id}`}
+                  href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/export/pdf/${post.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
@@ -438,7 +438,7 @@ export default function PostView() {
                   <span>PDF</span>
                 </a>
                 <a
-                  href={`/api/v1/export/epub/${post.id}`}
+                  href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/export/epub/${post.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border rounded-lg hover:bg-muted text-foreground"
