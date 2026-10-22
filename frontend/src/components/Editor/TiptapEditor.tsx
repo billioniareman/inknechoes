@@ -91,12 +91,19 @@ export default function TiptapEditor({
 
         const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
 
+        const getCollabHeaders = (contentType?: string): Record<string, string> => {
+          const headers: Record<string, string> = {}
+          if (contentType) headers['Content-Type'] = contentType
+          const token = localStorage.getItem('access_token')
+          if (token) headers['Authorization'] = `Bearer ${token}`
+          return headers
+        }
+
         // Fetch snapshot for this book/chapter
         try {
           const q = `?chapter_id=${chapterId}`
-          const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
           const resp = await fetch(`${baseUrl}/api/v1/collab/books/${bookId}${q}`, {
-            headers: { ...tokenHeader },
+            headers: getCollabHeaders(),
             credentials: 'include'
           })
           if (resp.ok) {
@@ -187,10 +194,9 @@ export default function TiptapEditor({
             const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
             const targetCollabId = effectiveCollabId
             if (!targetCollabId) return
-            const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
             await fetch(`${baseUrl}/api/v1/collab/${targetCollabId}/snapshot`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...tokenHeader },
+              headers: getCollabHeaders('application/json'),
               credentials: 'include',
               body: JSON.stringify({ snapshot_b64: b64 })
             })
@@ -209,10 +215,9 @@ export default function TiptapEditor({
               const b64 = btoa(String.fromCharCode(...Array.from(update as Uint8Array)))
               const targetCollabId = effectiveCollabId
               if (!targetCollabId) return
-              const tokenHeader = localStorage.getItem('access_token') ? { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` } : {}
               await fetch(`${baseUrl}/api/v1/collab/${targetCollabId}/snapshot`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...tokenHeader },
+                headers: getCollabHeaders('application/json'),
                 credentials: 'include',
                 body: JSON.stringify({ snapshot_b64: b64 })
               })
