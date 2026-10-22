@@ -13,10 +13,12 @@ from app.models.follower import followers
 from app.models.notification import Notification
 from app.models.tag import Tag, post_tags
 from app.models.analytics import PageView
+from app.models.collaborative_book import CollaborativeBook
 
 __all__ = [
     "User",
-    "Post"," post_likes",
+    "Post",
+    "post_likes",
     "post_claps",
     "Comment",
     "comment_likes",
@@ -32,4 +34,5 @@ __all__ = [
     "Tag",
     "post_tags",
     "PageView",
+    "CollaborativeBook",
 ]

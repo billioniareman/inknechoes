@@ -9,7 +9,7 @@ from app.database.mongo import connect_to_mongo, close_mongo_connection
 # Import models to ensure they're registered with Base
 from app.models import (
     User, Post, Comment, Chapter, Bookmark, ReadingProgress, 
-    AuditLog, UserPreferences, UserSession, VerificationToken, followers, Notification, Tag, post_tags
+    AuditLog, UserPreferences, UserSession, VerificationToken, followers, Notification, Tag, post_tags, CollaborativeBook
 )
 from app.middleware.logging import log_requests
 from app.middleware.rate_limiter import limiter
@@ -100,25 +100,25 @@ async def startup_event():
     # Create PostgreSQL tables
     try:
         Base.metadata.create_all(bind=engine)
-        print("✓ PostgreSQL tables created successfully")
+        print("[OK] Database tables created successfully")
     except Exception as e:
-        print(f"✗ PostgreSQL connection failed: {e}")
-        print("⚠️  Continuing without PostgreSQL - some features may not work")
+        print(f"[ERROR] Database connection failed: {e}")
+        print("[WARNING] Continuing without Database - some features may not work")
     
     # Connect to MongoDB
     try:
         await connect_to_mongo()
-        print("✓ MongoDB connected successfully")
+        print("[OK] MongoDB connected successfully")
     except Exception as e:
-        print(f"✗ MongoDB connection failed: {e}")
-        print("⚠️  Continuing without MongoDB - some features may not work")
+        print(f"[ERROR] MongoDB connection failed: {e}")
+        print("[WARNING] Continuing without MongoDB - some features may not work")
     
     # Create MongoDB text index for search functionality
     try:
         await create_mongodb_text_index()
-        print("✓ MongoDB text index created successfully")
+        print("[OK] MongoDB text index created successfully")
     except Exception as e:
-        print(f"Text index may already exist or error occurred: {e}")
+        print(f"[INFO] Text index may already exist or error occurred: {e}")
 
 
 async def shutdown_event():

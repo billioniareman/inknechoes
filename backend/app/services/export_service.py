@@ -2,10 +2,16 @@ import markdown
 try:
     from weasyprint import HTML, CSS
     WEASYPRINT_AVAILABLE = True
-except OSError:
+except (ImportError, OSError):
     WEASYPRINT_AVAILABLE = False
     print("Warning: WeasyPrint not available. PDF export will be disabled.")
-from ebooklib import epub
+
+try:
+    from ebooklib import epub
+    EBOOKLIB_AVAILABLE = True
+except (ImportError, OSError):
+    EBOOKLIB_AVAILABLE = False
+    print("Warning: EbookLib not available. EPUB export will be disabled.")
 import io
 import os
 from app.models.post import Post
@@ -89,6 +95,11 @@ def generate_epub(post: Post, content: dict, author: User) -> bytes:
     """
     Generate EPUB from post content using EbookLib.
     """
+    if not EBOOKLIB_AVAILABLE:
+        raise RuntimeError(
+            "EPUB export is currently unavailable. Server is missing required dependency (ebooklib)."
+        )
+
     book = epub.EpubBook()
 
     # Set metadata

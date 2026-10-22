@@ -27,10 +27,15 @@ async def connect_to_mongo():
     # Test connection with timeout
     try:
         await mongodb.client.admin.command('ping')
-        print("✓ MongoDB connection successful")
+        print("[OK] MongoDB connection successful")
     except Exception as e:
-        print(f"✗ MongoDB connection test failed: {e}")
-        raise e
+        print(f"[ERROR] MongoDB connection test failed: {e}")
+        try:
+            from mongomock_motor import AsyncMongoMockClient
+            print("[INFO] Using in-memory AsyncMongoMockClient for local testing")
+            mongodb.client = AsyncMongoMockClient()
+        except ImportError:
+            raise e
 
 
 async def close_mongo_connection():
@@ -41,5 +46,14 @@ async def close_mongo_connection():
 
 def get_mongo_db():
     """Get MongoDB database instance"""
-    return mongodb.client.get_database()
+    if mongodb.client is None:
+        try:
+            from mongomock_motor import AsyncMongoMockClient
+            mongodb.client = AsyncMongoMockClient()
+        except ImportError:
+            raise RuntimeError("MongoDB client is not connected.")
+    try:
+        return mongodb.client.get_database("inknechoes")
+    except Exception:
+        return mongodb.client.inknechoes
 
