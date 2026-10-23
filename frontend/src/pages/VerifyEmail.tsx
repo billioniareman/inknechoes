@@ -56,26 +56,26 @@ export default function VerifyEmail() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+    <div className="max-w-md mx-auto py-8 sm:py-12 px-4">
+      <div className="bg-card border border-border p-6 sm:p-8 rounded-xl shadow-sm space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-serif font-bold text-amber-900 mb-2">
+          <h2 className="text-2xl sm:text-3xl font-serif font-bold text-foreground mb-2">
             Email Verification
           </h2>
         </div>
 
         {status === 'verifying' && (
           <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mb-4"></div>
-            <p className="text-amber-700">Verifying your email address...</p>
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
+            <p className="text-sm text-muted-foreground">Verifying your email address...</p>
           </div>
         )}
 
         {status === 'success' && (
-          <div className="text-center py-8">
-            <div className="inline-block bg-green-100 rounded-full p-3 mb-4">
+          <div className="text-center py-6 space-y-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-full mb-1">
               <svg
-                className="h-12 w-12 text-green-600"
+                className="h-6 w-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -88,8 +88,8 @@ export default function VerifyEmail() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-green-800 mb-2">Email Verified!</h3>
-            <p className="text-green-700 mb-4">
+            <h3 className="text-lg font-serif font-semibold text-foreground">Email Verified!</h3>
+            <p className="text-sm text-muted-foreground">
               Your email has been successfully verified. Redirecting to login...
             </p>
           </div>
@@ -97,10 +97,10 @@ export default function VerifyEmail() {
 
         {status === 'error' && (
           <div className="space-y-6">
-            <div className="text-center py-4">
-              <div className="inline-block bg-red-100 rounded-full p-3 mb-4">
+            <div className="text-center py-4 space-y-3">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-destructive/15 text-destructive rounded-full mb-1">
                 <svg
-                  className="h-12 w-12 text-red-600"
+                  className="h-6 w-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -113,19 +113,19 @@ export default function VerifyEmail() {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-red-800 mb-2">Verification Failed</h3>
-              <p className="text-red-700 mb-4">
+              <h3 className="text-lg font-serif font-semibold text-destructive">Verification Failed</h3>
+              <p className="text-sm text-muted-foreground">
                 The verification link is invalid or has expired.
               </p>
             </div>
 
-            <div className="border-t pt-6">
-              <h4 className="text-lg font-semibold text-amber-900 mb-4">
+            <div className="border-t border-border pt-6">
+              <h4 className="text-base font-serif font-semibold text-foreground mb-4">
                 Resend Verification Email
               </h4>
               <form onSubmit={handleResendVerification} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                     Email Address
                   </label>
                   <input
@@ -134,14 +134,14 @@ export default function VerifyEmail() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2.5 text-base sm:text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
                     placeholder="your@email.com"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={resending}
-                  className="w-full bg-amber-600 text-white py-2 px-4 rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors shadow-sm"
                 >
                   {resending ? 'Sending...' : 'Resend Verification Email'}
                 </button>
@@ -153,18 +153,18 @@ export default function VerifyEmail() {
         {status === 'idle' && !token && (
           <div className="space-y-6">
             <div className="text-center py-4">
-              <p className="text-gray-700 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 No verification token found. Please check your email for the verification link.
               </p>
             </div>
 
-            <div className="border-t pt-6">
-              <h4 className="text-lg font-semibold text-amber-900 mb-4">
+            <div className="border-t border-border pt-6">
+              <h4 className="text-base font-serif font-semibold text-foreground mb-4">
                 Resend Verification Email
               </h4>
               <form onSubmit={handleResendVerification} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
                     Email Address
                   </label>
                   <input
@@ -173,14 +173,14 @@ export default function VerifyEmail() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-amber-500 focus:border-amber-500"
+                    className="w-full px-4 py-2.5 text-base sm:text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
                     placeholder="your@email.com"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={resending}
-                  className="w-full bg-amber-600 text-white py-2 px-4 rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-primary text-primary-foreground py-2.5 px-4 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors shadow-sm"
                 >
                   {resending ? 'Sending...' : 'Resend Verification Email'}
                 </button>
@@ -189,10 +189,10 @@ export default function VerifyEmail() {
           </div>
         )}
 
-        <div className="text-center pt-4 border-t">
+        <div className="text-center pt-4 border-t border-border">
           <Link
             to="/login"
-            className="text-amber-600 hover:text-amber-700 font-medium"
+            className="text-sm text-primary hover:underline font-medium"
           >
             Back to Login
           </Link>

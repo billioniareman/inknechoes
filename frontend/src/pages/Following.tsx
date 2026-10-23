@@ -38,89 +38,87 @@ export default function Following() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-gray-600 dark:text-gray-400">Loading following...</div>
+            <div className="py-16 flex items-center justify-center">
+                <div className="text-muted-foreground text-sm">Loading following...</div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-                <div className="text-red-600">{error}</div>
+            <div className="py-16 flex items-center justify-center">
+                <div className="text-destructive text-sm">{error}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-            <div className="max-w-4xl mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <Link
-                        to={`/user/${username}`}
-                        className="text-blue-600 hover:text-blue-700 mb-4 inline-block"
-                    >
-                        ← Back to Profile
-                    </Link>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        @{username} is following
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-2">
-                        {following.length} {following.length === 1 ? 'user' : 'users'}
-                    </p>
-                </div>
-
-                {following.length === 0 ? (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                        <p className="text-gray-600 dark:text-gray-400">Not following anyone yet</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4">
-                        {following.map(user => (
-                            <div
-                                key={user.id}
-                                className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex items-start justify-between"
-                            >
-                                <div className="flex-1">
-                                    <Link
-                                        to={`/user/${user.username}`}
-                                        className="text-xl font-semibold text-gray-900 dark:text-white hover:text-blue-600"
-                                    >
-                                        @{user.username}
-                                    </Link>
-                                    {user.bio && (
-                                        <p className="text-gray-600 dark:text-gray-400 mt-2">{user.bio}</p>
-                                    )}
-                                    {user.genre_tags && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            {user.genre_tags.split(',').map(tag => (
-                                                <span
-                                                    key={tag}
-                                                    className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm"
-                                                >
-                                                    {tag.trim()}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                                        Joined {new Date(user.created_at).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <div className="ml-4">
-                                    <FollowButton
-                                        username={user.username}
-                                        initialIsFollowing={user.is_following}
-                                        onFollowChange={(isFollowing) =>
-                                            handleFollowChange(user.username, isFollowing)
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="mb-6 sm:mb-8">
+                <Link
+                    to={`/user/${username}`}
+                    className="text-primary hover:underline mb-3 inline-flex items-center gap-1 text-sm font-medium"
+                >
+                    ← Back to Profile
+                </Link>
+                <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
+                    @{username} is following
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                    {following.length} {following.length === 1 ? 'user' : 'users'}
+                </p>
             </div>
+
+            {following.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl shadow-sm p-8 text-center">
+                    <p className="text-muted-foreground">Not following anyone yet</p>
+                </div>
+            ) : (
+                <div className="space-y-3.5">
+                    {following.map(user => (
+                        <div
+                            key={user.id}
+                            className="bg-card border border-border rounded-xl shadow-sm p-5 sm:p-6 flex items-start justify-between gap-4 text-card-foreground"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <Link
+                                    to={`/user/${user.username}`}
+                                    className="text-lg sm:text-xl font-serif font-semibold text-foreground hover:text-primary transition-colors truncate block"
+                                >
+                                    @{user.username}
+                                </Link>
+                                {user.bio && (
+                                    <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{user.bio}</p>
+                                )}
+                                {user.genre_tags && (
+                                    <div className="flex flex-wrap gap-1.5 mt-3">
+                                        {user.genre_tags.split(',').map(tag => (
+                                            <span
+                                                key={tag}
+                                                className="px-2.5 py-0.5 bg-secondary text-secondary-foreground rounded-full text-xs font-medium border border-border/50"
+                                            >
+                                                {tag.trim()}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Joined {new Date(user.created_at).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div className="flex-shrink-0">
+                                <FollowButton
+                                    username={user.username}
+                                    initialIsFollowing={user.is_following}
+                                    onFollowChange={(isFollowing) =>
+                                        handleFollowChange(user.username, isFollowing)
+                                    }
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

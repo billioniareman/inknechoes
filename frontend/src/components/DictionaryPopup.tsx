@@ -97,26 +97,26 @@ export default function DictionaryPopup({
   return (
     <div
       ref={popupRef}
-      className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col"
+      className="fixed z-50 bg-card border border-border rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col text-card-foreground backdrop-blur-sm"
       style={{
         left: `${finalPosition.x}px`,
         top: `${finalPosition.y}px`,
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white capitalize">
+          <BookOpen className="h-5 w-5 text-primary" />
+          <h3 className="font-serif font-bold text-lg text-foreground capitalize">
             {word}
           </h3>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Close dictionary"
         >
-          <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
@@ -124,12 +124,12 @@ export default function DictionaryPopup({
       <div className="overflow-y-auto p-4 flex-1">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading definition...</span>
+            <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-primary"></div>
+            <span className="ml-3 text-sm text-muted-foreground">Looking up definition...</span>
           </div>
         ) : definition === null ? (
           <div className="text-center py-8">
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               No definition found for &quot;{word}&quot;
             </p>
           </div>
@@ -138,12 +138,12 @@ export default function DictionaryPopup({
             <div key={entryIndex} className="space-y-4">
               {/* Phonetic */}
               {entry.phonetic && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <span className="italic">{entry.phonetic}</span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="italic font-serif">{entry.phonetic}</span>
                   {entry.phonetics.find((p) => p.audio) && (
                     <button
                       onClick={() => playAudio(entry.phonetics.find((p) => p.audio)?.audio)}
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      className="p-1 rounded-md hover:bg-muted text-primary transition-colors"
                       aria-label="Play pronunciation"
                     >
                       <Volume2 className="h-4 w-4" />
@@ -154,8 +154,8 @@ export default function DictionaryPopup({
 
               {/* Origin */}
               {entry.origin && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                  <span className="font-semibold">Origin: </span>
+                <div className="text-xs text-muted-foreground italic font-serif">
+                  <span className="font-semibold font-sans not-italic">Origin: </span>
                   {entry.origin}
                 </div>
               )}
@@ -164,32 +164,32 @@ export default function DictionaryPopup({
               {entry.meanings.map((meaning, meaningIndex) => (
                 <div key={meaningIndex} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wider font-sans">
                       {meaning.partOfSpeech}
                     </span>
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                    <div className="flex-1 h-px bg-border"></div>
                   </div>
 
-                  <div className="space-y-3 ml-2">
+                  <div className="space-y-3 ml-1">
                     {meaning.definitions.map((def, defIndex) => (
-                      <div key={defIndex} className="space-y-1">
-                        <p className="text-gray-900 dark:text-white">
-                          {defIndex + 1}. {def.definition}
+                      <div key={defIndex} className="space-y-1 text-sm">
+                        <p className="text-foreground leading-relaxed">
+                          <strong className="text-muted-foreground font-serif mr-1">{defIndex + 1}.</strong> {def.definition}
                         </p>
                         {def.example && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 italic ml-4">
+                          <p className="text-xs text-muted-foreground italic ml-4 font-serif">
                             &quot;{def.example}&quot;
                           </p>
                         )}
                         {def.synonyms.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                            <span className="text-xs font-medium text-muted-foreground mr-1">
                               Synonyms:
                             </span>
                             {def.synonyms.slice(0, 5).map((synonym, idx) => (
                               <span
                                 key={idx}
-                                className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                                className="text-xs px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full border border-border/50"
                               >
                                 {synonym}
                               </span>
@@ -198,13 +198,13 @@ export default function DictionaryPopup({
                         )}
                         {def.antonyms.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                            <span className="text-xs font-medium text-muted-foreground mr-1">
                               Antonyms:
                             </span>
                             {def.antonyms.slice(0, 5).map((antonym, idx) => (
                               <span
                                 key={idx}
-                                className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded"
+                                className="text-xs px-2 py-0.5 bg-destructive/10 text-destructive rounded-full border border-destructive/20"
                               >
                                 {antonym}
                               </span>

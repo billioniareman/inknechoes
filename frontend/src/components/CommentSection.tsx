@@ -82,14 +82,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
+          <p className="text-muted-foreground text-sm">No comments yet. Be the first to comment!</p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="border border-border/50 rounded-lg p-5 bg-white/50 mb-4">
+            <div key={comment.id} className="border border-border rounded-xl p-5 bg-card shadow-sm text-card-foreground mb-4">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="font-semibold text-foreground">{comment.author_username}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(comment.created_at).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
@@ -100,11 +100,11 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   </p>
                 </div>
               </div>
-              <p className="mb-3 text-foreground leading-relaxed">{comment.content}</p>
+              <p className="mb-3 text-foreground leading-relaxed text-sm sm:text-base">{comment.content}</p>
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => handleLike(comment.id)}
-                  className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+                  className="flex items-center space-x-1.5 text-xs sm:text-sm text-muted-foreground hover:text-accent transition-colors"
                 >
                   <Heart className="h-4 w-4" />
                   <span>{comment.likes_count}</span>

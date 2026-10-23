@@ -53,3 +53,29 @@ def get_db():
     finally:
         db.close()
 
+
+def run_migrations():
+    """Run Alembic database migrations up to head"""
+    from alembic.config import Config
+    from alembic import command
+    from sqlalchemy import inspect
+    
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    alembic_ini_path = os.path.join(backend_dir, "alembic.ini")
+    if not os.path.exists(alembic_ini_path):
+        Base.metadata.create_all(bind=engine)
+        print("[OK] Database tables created successfully via Base.metadata")
+        return
+        
+    alembic_cfg = Config(alembic_ini_path)
+    
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+    if "alembic_version" not in tables and "users" in tables:
+        command.stamp(alembic_cfg, "head")
+        print("[OK] Existing database stamped at Alembic head")
+    else:
+        command.upgrade(alembic_cfg, "head")
+        print("[OK] Database migrations applied successfully (Alembic head)")
+
+

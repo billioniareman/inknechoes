@@ -24,12 +24,12 @@ export default function TrendingTags() {
 
     if (loading) {
         return (
-            <div className="bg-white border border-amber-200 rounded-lg p-4">
-                <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
+            <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm text-card-foreground">
+                <h3 className="font-serif font-semibold text-foreground mb-3 flex items-center gap-2 text-base">
+                    <TrendingUp className="w-4 h-4 text-primary" />
                     Trending Tags
                 </h3>
-                <p className="text-sm text-amber-600">Loading...</p>
+                <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
         );
     }
@@ -39,9 +39,9 @@ export default function TrendingTags() {
     }
 
     return (
-        <div className="bg-white border border-amber-200 rounded-lg p-4">
-            <h3 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
+        <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm text-card-foreground">
+            <h3 className="font-serif font-semibold text-foreground mb-3 flex items-center gap-2 text-base">
+                <TrendingUp className="w-4 h-4 text-primary" />
                 Trending Tags
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -49,11 +49,11 @@ export default function TrendingTags() {
                     <Link
                         key={tag.id}
                         to={`/tags/${tag.slug}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full text-sm text-amber-900 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary text-secondary-foreground hover:bg-muted border border-border/70 rounded-full text-xs sm:text-sm font-medium transition-colors"
                     >
-                        <TagIcon className="w-3 h-3" />
-                        <span className="font-medium">#{tag.name}</span>
-                        <span className="text-xs text-amber-600">({tag.post_count})</span>
+                        <TagIcon className="w-3 h-3 text-muted-foreground" />
+                        <span>#{tag.name}</span>
+                        <span className="text-xs text-muted-foreground">({tag.post_count})</span>
                     </Link>
                 ))}
             </div>

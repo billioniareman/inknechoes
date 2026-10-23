@@ -52,12 +52,12 @@ export default function FollowButton({ username, initialIsFollowing, onFollowCha
         <button
             onClick={handleFollow}
             disabled={loading}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${isFollowing
-                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+            className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isFollowing
+                ? 'border border-border bg-card text-foreground hover:bg-muted/60 hover:border-destructive/40 hover:text-destructive'
+                : 'bg-primary text-primary-foreground hover:opacity-90 shadow-sm'
                 } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-            {loading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
+            {loading ? '...' : isFollowing ? 'Following' : 'Follow'}
         </button>
     );
 }

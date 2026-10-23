@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from app.config import get_settings
-from app.database.postgres import engine, Base
+from app.database.postgres import engine, Base, run_migrations
 from app.database.mongo import connect_to_mongo, close_mongo_connection
 # Import models to ensure they're registered with Base
 from app.models import (
@@ -97,13 +97,17 @@ from app.services.post_service import create_mongodb_text_index
 @app.on_event("startup")
 async def startup_event():
     """Initialize database connections and indexes"""
-    # Create PostgreSQL tables
+    # Run PostgreSQL migrations
     try:
-        Base.metadata.create_all(bind=engine)
-        print("[OK] Database tables created successfully")
+        run_migrations()
     except Exception as e:
-        print(f"[ERROR] Database connection failed: {e}")
-        print("[WARNING] Continuing without Database - some features may not work")
+        print(f"[WARNING] Alembic migration failed: {e}. Falling back to create_all.")
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("[OK] Database tables created successfully via fallback")
+        except Exception as err:
+            print(f"[ERROR] Database connection failed: {err}")
+            print("[WARNING] Continuing without Database - some features may not work")
     
     # Connect to MongoDB
     try:

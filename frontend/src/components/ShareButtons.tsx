@@ -43,9 +43,9 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
     };
 
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-amber-700 font-medium flex items-center gap-1">
-                <Share2 className="w-4 h-4" />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-xs sm:text-sm text-muted-foreground font-medium flex items-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5 text-primary" />
                 Share:
             </span>
 
@@ -53,20 +53,20 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
             {'share' in navigator && (
                 <button
                     onClick={handleShare}
-                    className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-foreground/80 hover:text-primary hover:bg-muted/60 rounded-lg transition-colors"
                     title="Share"
                 >
                     <Share2 className="w-4 h-4" />
                 </button>
             )}
 
-            {/* Twitter */}
+            {/* Twitter / X */}
             <a
                 href={shareLinks.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Share on Twitter"
+                className="p-1.5 sm:p-2 text-foreground/70 hover:text-foreground hover:bg-muted/60 rounded-lg transition-colors"
+                title="Share on X"
             >
                 <Twitter className="w-4 h-4" />
             </a>
@@ -76,7 +76,7 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
                 href={shareLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 text-foreground/70 hover:text-blue-600 hover:bg-muted/60 rounded-lg transition-colors"
                 title="Share on Facebook"
             >
                 <Facebook className="w-4 h-4" />
@@ -87,7 +87,7 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
                 href={shareLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 text-foreground/70 hover:text-blue-500 hover:bg-muted/60 rounded-lg transition-colors"
                 title="Share on LinkedIn"
             >
                 <Linkedin className="w-4 h-4" />
@@ -96,11 +96,11 @@ export default function ShareButtons({ url, title, description }: ShareButtonsPr
             {/* Copy Link */}
             <button
                 onClick={handleCopyLink}
-                className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors relative"
+                className="p-1.5 sm:p-2 text-foreground/70 hover:text-primary hover:bg-muted/60 rounded-lg transition-colors relative"
                 title="Copy link"
             >
                 {copied ? (
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                     <Link className="w-4 h-4" />
                 )}

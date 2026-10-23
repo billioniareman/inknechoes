@@ -31,10 +31,10 @@ export default function NotificationBell() {
     }
 
     return (
-        <Link to="/notifications" className="relative">
-            <Bell className="w-6 h-6 text-gray-700 dark:text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-colors" />
+        <Link to="/notifications" className="relative p-1.5 rounded-lg hover:bg-muted/50 transition-colors inline-flex items-center justify-center">
+            <Bell className="w-5 h-5 text-foreground/80 hover:text-primary transition-colors" />
             {stats && stats.unread_count > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 bg-accent text-accent-foreground text-[10px] font-bold rounded-full h-4 w-4 min-w-[16px] flex items-center justify-center shadow-sm">
                     {stats.unread_count > 9 ? '9+' : stats.unread_count}
                 </span>
             )}

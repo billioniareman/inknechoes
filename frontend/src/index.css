@@ -83,6 +83,14 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+
+  input, textarea, select {
+    @apply bg-background text-foreground border-border;
+  }
+  
+  input::placeholder, textarea::placeholder {
+    @apply text-muted-foreground/60;
+  }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', 'Cormorant Garamond', 'Georgia', serif;
